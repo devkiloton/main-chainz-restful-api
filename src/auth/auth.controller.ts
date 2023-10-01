@@ -2,18 +2,22 @@ import { Body, Controller, Delete, Get, HttpException, Param, Patch, Post } from
 import { CreateUserDto } from './dto/create-user-dto';
 import { AuthRepository } from './auth.repository';
 import { UserEntity } from './entities/user.entity';
-import { v4 as uuid } from 'uuid';
 import { UpdateUserDto } from './dto/update-user-dto';
 import { PublicUserDto } from './dto/public-user-dto';
 import { Response } from '../types/response';
+import { UuidService } from 'src/shared/services/uuid.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly _walletService: AuthRepository) {}
+  constructor(
+    private readonly _walletService: AuthRepository,
+    private readonly _uuidService: UuidService,
+  ) {}
 
   @Post()
   public async createOneUser(@Body() user: CreateUserDto): Promise<Response<PublicUserDto>> {
-    const userObj = new UserEntity(user.name, user.email, user.password, new Date(), uuid());
+    const uuid = this._uuidService.generateUuid();
+    const userObj = new UserEntity(uuid, user.name, user.email, user.password, new Date(), new Date());
     await this._walletService.createOne(userObj);
     return {
       message: 'User created successfully',
@@ -48,7 +52,7 @@ export class AuthController {
   }
 
   @Delete('/:id')
-  public async deleteOneUser(@Param('id') id: string): Promise<Response<null>> {
+  public async deleteOneUser(@Param('id') id: string): Promise<Response<boolean>> {
     const result = await this._walletService.deleteOne(id);
 
     if (!result) {
