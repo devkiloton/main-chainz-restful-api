@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, HttpException, Param, Patch, Post } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user-dto';
-import { AuthService } from './auth.service';
+import { AuthRepository } from './auth.repository';
 import { UserEntity } from './entities/user.entity';
 import { v4 as uuid } from 'uuid';
 import { UpdateUserDto } from './dto/update-user-dto';
@@ -9,7 +9,7 @@ import { Response } from '../types/response';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly _walletService: AuthService) {}
+  constructor(private readonly _walletService: AuthRepository) {}
 
   @Post()
   public async createOneUser(@Body() user: CreateUserDto): Promise<Response<PublicUserDto>> {

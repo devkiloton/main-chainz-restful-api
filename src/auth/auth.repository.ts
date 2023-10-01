@@ -3,7 +3,7 @@ import { UserEntity } from './entities/user.entity';
 import { pickBy } from 'lodash';
 
 @Injectable()
-export class AuthService {
+export class AuthRepository {
   private _users: Array<UserEntity> = [];
 
   public async createOne(user: UserEntity): Promise<void> {
