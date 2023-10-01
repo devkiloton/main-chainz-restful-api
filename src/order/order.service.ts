@@ -1,26 +1,40 @@
 import { Injectable } from '@nestjs/common';
-import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { OrderEntity } from './entities/order.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { FindManyOptions, Repository } from 'typeorm';
 
 @Injectable()
 export class OrderService {
-  create(createOrderDto: CreateOrderDto) {
-    return 'This action adds a new order';
+  constructor(@InjectRepository(OrderEntity) private readonly _orderRepository: Repository<OrderEntity>) {}
+
+  public async create(_order: OrderEntity): Promise<void> {
+    await this._orderRepository.save(_order);
   }
 
-  findAll() {
-    return `This action returns all order`;
+  public async findAll(): Promise<OrderEntity[]> {
+    const options: FindManyOptions<OrderEntity> = { order: { createdAt: 'DESC' } };
+    const orders = await this._orderRepository.find(options);
+    return orders;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} order`;
+  public async findOne(id: string): Promise<OrderEntity | null> {
+    const options = { where: { id } };
+    const possibleUser = await this._orderRepository.findOne(options);
+    return possibleUser ?? null;
   }
 
-  update(id: number, updateOrderDto: UpdateOrderDto) {
-    return `This action updates a #${id} order`;
+  public async update(id: string, _updateOrderDto: UpdateOrderDto): Promise<OrderEntity | null> {
+    const order = await this.findOne(id);
+    if (!order) {
+      return null;
+    }
+    const updatedOrder = await this._orderRepository.update(id, _updateOrderDto);
+    return updatedOrder.raw.affectedRows > 0 ? order : null;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} order`;
+  public async remove(id: string): Promise<boolean> {
+    const isRemoved = await this._orderRepository.delete(id);
+    return isRemoved.raw.affectedRows > 0;
   }
 }
