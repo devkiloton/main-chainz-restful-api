@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import { PostgresService } from './config/postgres.config.service';
 import { ConfigModule } from '@nestjs/config';
 import { OrderModule } from './order/order.module';
+import { AllExceptionsFilter } from './exception-filter/all-exceptions.filter';
 
 @Module({
   imports: [
@@ -17,5 +18,6 @@ import { OrderModule } from './order/order.module';
     AuthModule,
     OrderModule,
   ],
+  providers: [AllExceptionsFilter],
 })
 export class AppModule {}
