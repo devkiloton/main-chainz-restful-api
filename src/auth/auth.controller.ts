@@ -5,7 +5,7 @@ import { UserEntity } from './entities/user.entity';
 import { v4 as uuid } from 'uuid';
 import { UpdateUserDto } from './dto/update-user-dto';
 import { PublicUserDto } from './dto/public-user-dto';
-import { Response } from './types/response';
+import { Response } from '../types/response';
 
 @Controller('auth')
 export class AuthController {
