@@ -1,4 +1,13 @@
-import { Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { OrderEntity } from '../../order/entities/order.entity';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity({ name: 'users' })
 export class UserEntity {
@@ -16,6 +25,8 @@ export class UserEntity {
   public readonly updatedAt!: Date;
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   public readonly deletedAt!: Date | null;
+  @OneToMany(() => OrderEntity, order => order.user)
+  public orders!: OrderEntity[];
 
   constructor(
     id: string,
