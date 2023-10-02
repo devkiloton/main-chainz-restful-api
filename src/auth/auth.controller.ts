@@ -6,6 +6,7 @@ import { UpdateUserDto } from './dto/update-user-dto';
 import { PublicUserDto } from './dto/public-user-dto';
 import { Response } from '../types/response';
 import { UuidService } from 'src/shared/services/uuid.service';
+import { PasswordHashingPipe } from 'src/resources/pipes/password-hashing.pipe';
 
 @Controller('auth')
 export class AuthController {
@@ -15,9 +16,12 @@ export class AuthController {
   ) {}
 
   @Post()
-  public async createOneUser(@Body() user: CreateUserDto): Promise<Response<PublicUserDto>> {
+  public async createOneUser(
+    @Body() user: CreateUserDto,
+    @Body('password', PasswordHashingPipe) hashedPassword: string,
+  ): Promise<Response<PublicUserDto>> {
     const uuid = this._uuidService.generateUuid();
-    const userObj = new UserEntity(uuid, user.name, user.email, user.password, new Date(), new Date());
+    const userObj = new UserEntity(uuid, user.name, user.email, hashedPassword, new Date(), new Date());
     await this._walletService.createOne(userObj);
     return {
       message: 'User created successfully',
