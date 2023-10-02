@@ -8,7 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { StatusOrder } from '../enum/status-order';
-import { UserEntity } from '../../auth/entities/user.entity';
+import { UserEntity } from '../../user/entities/user.entity';
 
 @Entity({ name: 'orders' })
 export class OrderEntity {

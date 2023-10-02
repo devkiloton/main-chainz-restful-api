@@ -1,4 +1,12 @@
 export class PublicOrder {
+  id: string;
+  currencyCode: string;
+  amount: number;
+  status: string;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+
   constructor(
     id: string,
     currencyCode: string,
@@ -16,11 +24,4 @@ export class PublicOrder {
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
-  id: string;
-  currencyCode: string;
-  amount: number;
-  status: string;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
 }

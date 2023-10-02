@@ -6,6 +6,7 @@ import { OrderEntity } from './entities/order.entity';
 import { UuidService } from 'src/shared/services/uuid.service';
 import { Response } from 'src/types/response';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import { PublicOrder } from './models/public-order';
 
 @Controller('order')
 export class OrderController {
@@ -15,7 +16,7 @@ export class OrderController {
   ) {}
 
   @Post()
-  async create(@Body() createOrderDto: CreateOrderDto): Promise<Response<Promise<void>>> {
+  async create(@Body() createOrderDto: CreateOrderDto): Promise<Response<PublicOrder>> {
     const order = new OrderEntity(
       this._uuidService.generateUuid(),
       createOrderDto.currencyCode,
@@ -23,45 +24,80 @@ export class OrderController {
       new Date(),
       new Date(),
     );
-    await this.orderService.create(order);
+    const possibleOrder = await this.orderService.create(order);
     return {
       message: 'Order created successfully',
+      data: new PublicOrder(
+        possibleOrder.id,
+        possibleOrder.currencyCode,
+        possibleOrder.amount,
+        possibleOrder.status,
+        possibleOrder.user.id,
+        possibleOrder.createdAt,
+        possibleOrder.updatedAt,
+      ),
     };
   }
 
   @Get()
   @UseInterceptors(CacheInterceptor)
-  async findAll(): Promise<Response<OrderEntity[]>> {
-    const list = await this.orderService.findAll();
+  async findAll(): Promise<Response<PublicOrder[]>> {
+    const listOrders = await this.orderService.findAll();
     return {
       message: 'Orders retrieved successfully',
-      data: list,
+      data: listOrders.map(
+        order =>
+          new PublicOrder(
+            order.id,
+            order.currencyCode,
+            order.amount,
+            order.status,
+            order.user.id,
+            order.createdAt,
+            order.updatedAt,
+          ),
+      ),
     };
   }
 
   @Get(':id')
   @UseInterceptors(CacheInterceptor)
-  async findOne(@Param('id') id: string): Promise<Response<OrderEntity>> {
-    console.log('findOne');
-    const order = await this.orderService.findOne(id);
-    if (!order) {
+  async findOne(@Param('id') id: string): Promise<Response<PublicOrder>> {
+    const possibleOrder = await this.orderService.findOne(id);
+    if (!possibleOrder) {
       throw new HttpException('Order not found', 404);
     }
     return {
       message: 'Order retrieved successfully',
-      data: order,
+      data: new PublicOrder(
+        possibleOrder.id,
+        possibleOrder.currencyCode,
+        possibleOrder.amount,
+        possibleOrder.status,
+        possibleOrder.user.id,
+        possibleOrder.createdAt,
+        possibleOrder.updatedAt,
+      ),
     };
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto): Promise<Response<OrderEntity>> {
-    const possibleUser = await this.orderService.update(id, updateOrderDto);
-    if (!possibleUser) {
+  async update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto): Promise<Response<PublicOrder>> {
+    const possibleOrder = await this.orderService.update(id, updateOrderDto);
+    if (!possibleOrder) {
       throw new HttpException('Order not found', 404);
     }
     return {
       message: 'Order updated successfully',
-      data: possibleUser,
+      data: new PublicOrder(
+        possibleOrder.id,
+        possibleOrder.currencyCode,
+        possibleOrder.amount,
+        possibleOrder.status,
+        possibleOrder.user.id,
+        possibleOrder.createdAt,
+        possibleOrder.updatedAt,
+      ),
     };
   }
 
