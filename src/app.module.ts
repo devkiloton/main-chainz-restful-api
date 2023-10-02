@@ -1,5 +1,5 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
 import { Module } from '@nestjs/common';
 import { PostgresService } from './config/postgres.config.service';
 import { ConfigModule } from '@nestjs/config';
@@ -26,7 +26,7 @@ import { APP_FILTER } from '@nestjs/core';
       }),
       isGlobal: true,
     }),
-    AuthModule,
+    UserModule,
     OrderModule,
   ],
   providers: [

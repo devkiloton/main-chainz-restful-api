@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrderEntity } from './entities/order.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -8,8 +8,12 @@ import { FindManyOptions, Repository } from 'typeorm';
 export class OrderService {
   constructor(@InjectRepository(OrderEntity) private readonly _orderRepository: Repository<OrderEntity>) {}
 
-  public async create(_order: OrderEntity): Promise<void> {
-    await this._orderRepository.save(_order);
+  public async create(_order: OrderEntity): Promise<OrderEntity> {
+    const possibleOrder = await this._orderRepository.save(_order);
+    if (!possibleOrder) {
+      throw new HttpException('Order not created', 500);
+    }
+    return possibleOrder;
   }
 
   public async findAll(): Promise<OrderEntity[]> {
