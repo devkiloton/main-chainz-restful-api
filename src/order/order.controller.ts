@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, UseInterceptors } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrderEntity } from './entities/order.entity';
 import { UuidService } from 'src/shared/services/uuid.service';
 import { Response } from 'src/types/response';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @Controller('order')
 export class OrderController {
@@ -29,6 +30,7 @@ export class OrderController {
   }
 
   @Get()
+  @UseInterceptors(CacheInterceptor)
   async findAll(): Promise<Response<OrderEntity[]>> {
     const list = await this.orderService.findAll();
     return {
@@ -38,7 +40,9 @@ export class OrderController {
   }
 
   @Get(':id')
+  @UseInterceptors(CacheInterceptor)
   async findOne(@Param('id') id: string): Promise<Response<OrderEntity>> {
+    console.log('findOne');
     const order = await this.orderService.findOne(id);
     if (!order) {
       throw new HttpException('Order not found', 404);
