@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, HttpException, Param, Patch, Post } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user-dto';
-import { AuthRepository } from './auth.repository';
+import { AuthService } from './auth.service';
 import { UserEntity } from './entities/user.entity';
 import { UpdateUserDto } from './dto/update-user-dto';
 import { PublicUserDto } from './dto/public-user-dto';
@@ -10,7 +10,7 @@ import { UuidService } from 'src/shared/services/uuid.service';
 @Controller('auth')
 export class AuthController {
   constructor(
-    private readonly _walletService: AuthRepository,
+    private readonly _walletService: AuthService,
     private readonly _uuidService: UuidService,
   ) {}
 
@@ -26,7 +26,7 @@ export class AuthController {
   }
 
   @Get('/:id')
-  public async getOneUser(@Param('id') id: string): Promise<Response<PublicUserDto>> {
+  public async getOneUser(@Param('id') id: string) {
     const user = await this._walletService.getOne(id);
     if (!user) {
       throw new HttpException('User not found', 404);

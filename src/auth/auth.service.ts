@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 @Injectable()
-export class AuthRepository {
+export class AuthService {
   constructor(@InjectRepository(UserEntity) private readonly _userRepository: Repository<UserEntity>) {}
 
   public async createOne(user: UserEntity): Promise<void> {
@@ -26,7 +26,6 @@ export class AuthRepository {
 
   public async updateOne(data: { id: string; user: Partial<UserEntity> }): Promise<UserEntity | null> {
     const userObj = await this._userRepository.update(data.id, data.user);
-    console.log(userObj);
     return userObj.raw ?? null;
   }
 
