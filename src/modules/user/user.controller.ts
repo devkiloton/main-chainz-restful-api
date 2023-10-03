@@ -13,9 +13,9 @@ export class UserController {
   @Post()
   public async createOneUser(
     @Body() user: CreateUserDto,
-    @Body('password', PasswordHashingPipe) hashedPassword: string,
+    @Body('password', PasswordHashingPipe) password: string,
   ): Promise<Response<PublicUser>> {
-    const possibleUser = await this._userService.createOne({ user, hashedPassword });
+    const possibleUser = await this._userService.createOne({ user, password });
     return {
       message: 'User created successfully',
       data: new PublicUser(possibleUser.name, possibleUser.email, possibleUser.id),
