@@ -1,26 +1,20 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
-
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { UserService } from '../user/user.service';
+import { HashService } from 'src/shared/services/hash/hash.service';
 @Injectable()
 export class AuthService {
-  create(_createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
-  }
-
-  findAll() {
-    return `This action returns all auth`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  update(id: number, _updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+  constructor(
+    private readonly _userService: UserService,
+    private readonly _hashService: HashService,
+  ) {}
+  public async signIn(data: { email: string; password: string }) {
+    const possibleUser = await this._userService.getOneByEmail(data.email);
+    if (!possibleUser) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const isMatch = await this._hashService.compareHash(data.password, possibleUser.password);
+    if (!isMatch) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
   }
 }
