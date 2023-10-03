@@ -1,13 +1,11 @@
 import { PipeTransform, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as bcrypt from 'bcrypt';
+import { HashService } from 'src/shared/services/hash/hash.service';
 
 @Injectable()
 export class PasswordHashingPipe implements PipeTransform {
-  constructor(private readonly _configService: ConfigService) {}
+  constructor(private readonly _hashService: HashService) {}
   async transform(password: string): Promise<string> {
-    const salt = this._configService.get<string>('SALT');
-    const hash = await bcrypt.hash(password, salt!);
+    const hash = await this._hashService.generateHash(password);
     return hash;
   }
 }

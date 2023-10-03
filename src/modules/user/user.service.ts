@@ -5,7 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UpdateUserDto } from './dto/update-user-dto';
 import { CreateUserDto } from './dto/create-user-dto';
-import { UuidService } from 'src/shared/services/uuid.service';
+import { UuidService } from 'src/shared/services/uuid/uuid.service';
 
 @Injectable()
 export class UserService {
@@ -14,9 +14,9 @@ export class UserService {
     private readonly _uuidService: UuidService,
   ) {}
 
-  public async createOne(data: { user: CreateUserDto; hashedPassword: string }): Promise<UserEntity> {
+  public async createOne(data: { user: CreateUserDto; password: string }): Promise<UserEntity> {
     const uuid = this._uuidService.generateUuid();
-    const userObj = new UserEntity(uuid, data.user.name, data.user.email, data.hashedPassword, new Date(), new Date());
+    const userObj = new UserEntity(uuid, data.user.name, data.user.email, data.password, new Date(), new Date());
     const possibleUser = await this._userRepository.save(userObj);
     if (!possibleUser) {
       throw new HttpException('User not created', 500);

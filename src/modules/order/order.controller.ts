@@ -3,7 +3,7 @@ import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrderEntity } from './entities/order.entity';
-import { UuidService } from 'src/shared/services/uuid.service';
+import { UuidService } from 'src/shared/services/uuid/uuid.service';
 import { Response } from 'src/types/response';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { PublicOrder } from './models/public-order';
