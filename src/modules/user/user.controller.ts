@@ -3,8 +3,8 @@ import { CreateUserDto } from './dto/create-user-dto';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user-dto';
 import { PublicUser } from './models/public-user';
-import { Response } from '../types/response';
 import { PasswordHashingPipe } from 'src/resources/pipes/password-hashing.pipe';
+import { Response } from 'src/types/response';
 
 @Controller('user')
 export class UserController {

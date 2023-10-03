@@ -1,13 +1,14 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserModule } from './user/user.module';
+
 import { Module } from '@nestjs/common';
 import { PostgresService } from './config/postgres.config.service';
 import { ConfigModule } from '@nestjs/config';
-import { OrderModule } from './order/order.module';
+import { OrderModule } from './modules/order/order.module';
 import { AllExceptionsFilter } from './resources/filters/exception-filter/all-exceptions.filter';
 import { CacheModule } from '@nestjs/cache-manager';
 import { redisStore } from 'cache-manager-redis-yet';
 import { APP_FILTER } from '@nestjs/core';
+import { UserModule } from './modules/user/user.module';
 
 @Module({
   imports: [
