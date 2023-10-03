@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { OrderController } from './order.controller';
-import { UuidService } from 'src/shared/services/uuid.service';
+import { UuidService } from 'src/shared/services/uuid/uuid.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OrderEntity } from './entities/order.entity';
 
