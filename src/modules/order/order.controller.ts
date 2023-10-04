@@ -1,4 +1,15 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpException, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  HttpException,
+  UseInterceptors,
+  UseGuards,
+} from '@nestjs/common';
 import { OrderService } from './order.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -7,7 +18,9 @@ import { UuidService } from 'src/shared/services/uuid/uuid.service';
 import { Response } from 'src/types/response';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { PublicOrder } from './models/public-order';
+import { AuthorizationGuard } from 'src/shared/guards/authorization.guard';
 
+@UseGuards(AuthorizationGuard)
 @Controller('order')
 export class OrderController {
   constructor(
@@ -25,17 +38,17 @@ export class OrderController {
       new Date(),
     );
     const possibleOrder = await this.orderService.create(order);
+    const orderToReturn = new PublicOrder(
+      possibleOrder.id,
+      possibleOrder.currencyCode,
+      possibleOrder.amount,
+      possibleOrder.status,
+      possibleOrder.createdAt,
+      possibleOrder.updatedAt,
+    );
     return {
       message: 'Order created successfully',
-      data: new PublicOrder(
-        possibleOrder.id,
-        possibleOrder.currencyCode,
-        possibleOrder.amount,
-        possibleOrder.status,
-        possibleOrder.user.id,
-        possibleOrder.createdAt,
-        possibleOrder.updatedAt,
-      ),
+      data: orderToReturn,
     };
   }
 
@@ -47,15 +60,7 @@ export class OrderController {
       message: 'Orders retrieved successfully',
       data: listOrders.map(
         order =>
-          new PublicOrder(
-            order.id,
-            order.currencyCode,
-            order.amount,
-            order.status,
-            order.user.id,
-            order.createdAt,
-            order.updatedAt,
-          ),
+          new PublicOrder(order.id, order.currencyCode, order.amount, order.status, order.createdAt, order.updatedAt),
       ),
     };
   }
@@ -74,7 +79,6 @@ export class OrderController {
         possibleOrder.currencyCode,
         possibleOrder.amount,
         possibleOrder.status,
-        possibleOrder.user.id,
         possibleOrder.createdAt,
         possibleOrder.updatedAt,
       ),
@@ -94,7 +98,6 @@ export class OrderController {
         possibleOrder.currencyCode,
         possibleOrder.amount,
         possibleOrder.status,
-        possibleOrder.user.id,
         possibleOrder.createdAt,
         possibleOrder.updatedAt,
       ),
