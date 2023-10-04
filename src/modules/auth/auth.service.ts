@@ -28,7 +28,6 @@ export class AuthService {
     };
 
     const token = await this._jwtService.signAsync(payload);
-    console.log(token);
     return {
       access_token: token,
     };
