@@ -24,7 +24,7 @@ export class OrderService {
 
   public async create(data: { userId: string; order: OrderEntity }): Promise<OrderEntity> {
     const user = await this.findUser(data.userId);
-
+    data.order.user = user;
     const possibleOrder = await this._orderRepository.save(data.order);
     possibleOrder.user = user;
     if (!possibleOrder) {
