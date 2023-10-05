@@ -1,18 +1,20 @@
+import { UserEntity } from 'src/modules/user/entities/user.entity';
+
 export class PublicOrder {
-  id: string;
-  currencyCode: string;
-  amount: number;
-  status: string;
-  userId: string;
-  createdAt: Date;
-  updatedAt: Date;
+  public id: string;
+  public currencyCode: string;
+  public amount: number;
+  public status: string;
+  public user: UserEntity;
+  public createdAt: Date;
+  public updatedAt: Date;
 
   constructor(
     id: string,
     currencyCode: string,
     amount: number,
     status: string,
-    userId: string,
+    userEntity: UserEntity,
     createdAt: Date,
     updatedAt: Date,
   ) {
@@ -20,7 +22,7 @@ export class PublicOrder {
     this.currencyCode = currencyCode;
     this.amount = amount;
     this.status = status;
-    this.userId = userId;
+    this.user = userEntity;
     this.createdAt = createdAt;
     this.updatedAt = updatedAt;
   }
