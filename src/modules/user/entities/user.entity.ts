@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { OrderEntity } from '../../order/entities/order.entity';
 import {
   Column,
@@ -17,6 +18,7 @@ export class UserEntity {
   public readonly name!: string;
   @Column({ name: 'email', nullable: false, length: 100 })
   public readonly email!: string;
+  @Exclude()
   @Column({ name: 'password', nullable: false, length: 255 })
   public readonly password!: string;
   @CreateDateColumn({ name: 'created_at' })
