@@ -3,6 +3,7 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -26,7 +27,12 @@ export class OrderEntity {
   public updatedAt!: Date;
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   public readonly deletedAt!: Date | null;
-  @ManyToOne(() => UserEntity, user => user.orders, { onDelete: 'CASCADE' })
+  @ManyToOne(() => UserEntity, user => user.orders, {
+    cascade: true,
+    nullable: true,
+    eager: true,
+  })
+  @JoinColumn()
   public user!: UserEntity;
 
   constructor(
