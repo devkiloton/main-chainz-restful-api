@@ -10,6 +10,7 @@ import { redisStore } from 'cache-manager-redis-yet';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { GlobalInterceptor } from './resources/interceptor/global.interceptor';
 
 @Module({
   imports: [
@@ -41,6 +42,10 @@ import { AuthModule } from './modules/auth/auth.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: ClassSerializerInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: GlobalInterceptor,
     },
     ConsoleLogger,
   ],
