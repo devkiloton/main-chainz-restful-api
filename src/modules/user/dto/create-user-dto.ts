@@ -1,5 +1,6 @@
-import { IsEmail, IsNotEmpty, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty } from 'class-validator';
 import { UniqueEmail } from '../decorators/unique-email.decorator';
+import { StrongPassword } from '../decorators/strong-password.decorator';
 
 export class CreateUserDto {
   @IsNotEmpty({ message: 'Name is required' })
@@ -9,6 +10,6 @@ export class CreateUserDto {
   @UniqueEmail({ message: 'Email already exists' })
   public email!: string;
 
-  @MinLength(6, { message: 'Password must be at least 6 characters' })
+  @StrongPassword({ message: 'Password is too weak' })
   public password!: string;
 }

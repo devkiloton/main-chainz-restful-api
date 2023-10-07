@@ -32,6 +32,6 @@
     "declaration": false,
     "downlevelIteration": true,
     "experimentalDecorators": true,
-    "importHelpers": true,
+    "importHelpers": true
   }
 }

@@ -13,13 +13,14 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
+    "prettier": "npx prettier --write .",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "typeorm-ts-node-esm --dataSource src/db/data-source-cli.ts",
-    "migration": "npm run typeorm migration:generate src/db/migrations/create-tables"
+    "migration:in": "npm run typeorm migration:generate"
   },
   "dependencies": {
     "@nestjs/cache-manager": "^2.1.0",
@@ -36,6 +37,7 @@
     "class-validator": "^0.14.0",
     "lodash": "^4.17.21",
     "pg": "^8.11.3",
+    "ramda": "^0.29.1",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
     "typeorm": "^0.3.17",
@@ -50,6 +52,7 @@
     "@types/jest": "^29.5.2",
     "@types/lodash": "^4.14.199",
     "@types/node": "^20.3.1",
+    "@types/ramda": "^0.29.6",
     "@types/supertest": "^2.0.12",
     "@types/uuid": "^9.0.4",
     "@typescript-eslint/eslint-plugin": "^6.0.0",

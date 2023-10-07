@@ -1,22 +1,21 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
-import { UserService } from '../user.service';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from '../entities/user.entity';
+import { Repository } from 'typeorm';
+import { isNil } from 'lodash';
 
 @Injectable()
 @ValidatorConstraint({ name: 'uniqueEmail', async: true })
 export class UniqueEmailValidator implements ValidatorConstraintInterface {
-  constructor(private readonly _userService: UserService) {}
+  constructor(@InjectRepository(UserEntity) private readonly _userRepository: Repository<UserEntity>) {}
 
   public async validate(_value: any, _validationArguments: ValidationArguments): Promise<boolean> {
-    try {
-      await this._userService.getOneByEmail(_value);
-      return false;
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        return true;
-      }
-
-      throw error;
+    const options = { where: { email: _value } };
+    const user = await this._userRepository.findOne(options);
+    if (isNil(user)) {
+      return true;
     }
+    return false;
   }
 }
