@@ -7,7 +7,8 @@ import { Response } from 'src/types/response';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { AuthorizationGuard } from 'src/shared/guards/authorization.guard';
 import { UserReq } from 'src/types/user-req';
-
+import { ApiTags } from '@nestjs/swagger';
+@ApiTags('/orders')
 @Controller('orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
