@@ -4,6 +4,8 @@ import { OrderEntity } from './entities/order.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { FindManyOptions, FindOneOptions, Repository } from 'typeorm';
 import { UserEntity } from '../user/entities/user.entity';
+import { isNil } from 'lodash';
+import { CreateOrderDto } from './dto/create-order.dto';
 
 @Injectable()
 export class OrderService {
@@ -12,22 +14,23 @@ export class OrderService {
     @InjectRepository(UserEntity) private readonly _userRepository: Repository<UserEntity>,
   ) {}
 
-  private async findUser(id: string) {
-    const options = { where: { id } };
+  public async createOne(data: { userId: string; createOrderDto: CreateOrderDto }): Promise<OrderEntity> {
+    const order = new OrderEntity();
+    order.currencyCode = data.createOrderDto.currencyCode;
+    order.amount = data.createOrderDto.amount;
+    order.status = data.createOrderDto.status;
+
+    const options = { where: { id: data.userId } };
     const user = await this._userRepository.findOne(options);
 
-    if (user === null) {
+    if (isNil(user)) {
       throw new NotFoundException('User not found');
     }
-    return user;
-  }
 
-  public async create(data: { userId: string; order: OrderEntity }): Promise<OrderEntity> {
-    const user = await this.findUser(data.userId);
-    data.order.user = user;
-    const possibleOrder = await this._orderRepository.save(data.order);
+    order.user = user;
+    const possibleOrder = await this._orderRepository.save(order);
     possibleOrder.user = user;
-    if (!possibleOrder) {
+    if (isNil(possibleOrder)) {
       throw new HttpException('Order not created', 500);
     }
     return possibleOrder;
@@ -42,10 +45,13 @@ export class OrderService {
       },
     };
     const orders = await this._orderRepository.find(options);
+    if (isNil(orders)) {
+      throw new NotFoundException('Orders not found');
+    }
     return orders;
   }
 
-  public async findOne(data: { id: string; userId: string }): Promise<OrderEntity | null> {
+  public async findOne(data: { id: string; userId: string }): Promise<OrderEntity> {
     const options: FindOneOptions<OrderEntity> = {
       where: { id: data.id, user: { id: data.userId } },
       relations: {
@@ -53,22 +59,20 @@ export class OrderService {
       },
     };
     const possibleOrder = await this._orderRepository.findOne(options);
-    if (possibleOrder === null) {
+    if (isNil(possibleOrder)) {
       throw new NotFoundException('Order not found');
     }
     return possibleOrder;
   }
 
-  public async update(data: {
-    userId: string;
-    id: string;
-    updateOrderDto: UpdateOrderDto;
-  }): Promise<OrderEntity | null> {
-    const order = await this._orderRepository.findOne({
-      where: { id: data.id },
+  public async updateOne(data: { userId: string; id: string; updateOrderDto: UpdateOrderDto }): Promise<OrderEntity> {
+    const options = {
+      where: { id: data.id, user: { id: data.userId } },
       relations: { user: true },
-    });
-    if (order === null) {
+    };
+
+    const order = await this._orderRepository.findOne(options);
+    if (isNil(order)) {
       throw new NotFoundException('Order not found');
     }
 
@@ -76,24 +80,29 @@ export class OrderService {
       throw new ForbiddenException('You cannot update a order that is not yours.');
     }
 
-    Object.assign(order, UpdateOrderDto as unknown as OrderEntity);
+    const newOrderObj = new OrderEntity();
+    newOrderObj.currencyCode = data.updateOrderDto.currencyCode;
+    newOrderObj.amount = data.updateOrderDto.amount;
+    newOrderObj.status = data.updateOrderDto.status;
 
-    return this._orderRepository.save(order);
+    Object.assign(order, newOrderObj);
+
+    const possibleOrder = await this._orderRepository.save(order);
+    if (isNil(possibleOrder)) {
+      throw new HttpException('Order not updated', 500);
+    }
+    return possibleOrder;
   }
 
-  public async remove(data: { userId: string; id: string }): Promise<boolean> {
+  public async removeOne(data: { userId: string; id: string }): Promise<void> {
     const order = await this._orderRepository.findOne({
       where: { id: data.id, user: { id: data.userId } },
       relations: { user: true },
     });
-    if (order === null) {
+    if (isNil(order)) {
       throw new NotFoundException('Order not found');
     }
-    if (order.user.id !== data.userId) {
-      throw new ForbiddenException('You cannot delete a order that is not yours.');
-    }
 
-    const isRemoved = await this._orderRepository.delete(order.id);
-    return isRemoved.raw.affectedRows > 0;
+    await this._orderRepository.delete(order.id);
   }
 }

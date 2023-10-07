@@ -1,65 +1,65 @@
 import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
 import { UserEntity } from './entities/user.entity';
-import { isNil, pickBy } from 'lodash';
+import { isNil } from 'lodash';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UpdateUserDto } from './dto/update-user-dto';
 import { CreateUserDto } from './dto/create-user-dto';
-import { UuidService } from 'src/shared/services/uuid/uuid.service';
+import { isNotNil } from 'ramda';
 
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectRepository(UserEntity) private readonly _userRepository: Repository<UserEntity>,
-    private readonly _uuidService: UuidService,
-  ) {}
+  constructor(@InjectRepository(UserEntity) private readonly _userRepository: Repository<UserEntity>) {}
 
   public async createOne(data: { user: CreateUserDto; password: string }): Promise<UserEntity> {
-    const uuid = this._uuidService.generateUuid();
-    const userObj = new UserEntity(uuid, data.user.name, data.user.email, data.password, new Date(), new Date());
+    const userObj = new UserEntity();
+    userObj.name = data.user.name;
+    userObj.email = data.user.email;
+    userObj.password = data.password;
     const possibleUser = await this._userRepository.save(userObj);
-    if (!possibleUser) {
+    if (isNil(possibleUser)) {
       throw new HttpException('User not created', 500);
     }
     return possibleUser;
   }
 
-  public async getOne(id: string): Promise<UserEntity> {
+  public async findMe(id: string): Promise<UserEntity> {
     const options = { where: { id } };
     const possibleUser = await this._userRepository.findOne(options);
-    if (!possibleUser) {
-      throw new NotFoundException('User not found 1');
-    }
-    return possibleUser;
-  }
-
-  public async getOneByEmail(email: string): Promise<UserEntity> {
-    const options = { where: { email } };
-    const possibleUser = await this._userRepository.findOne(options);
-    if (!possibleUser) {
-      throw new NotFoundException('User not found 2');
+    if (isNil(possibleUser)) {
+      throw new NotFoundException('User not found');
     }
     return possibleUser;
   }
 
   public async updateOne(data: { id: string; user: UpdateUserDto }): Promise<UserEntity> {
-    const user = new UpdateUserDto(data.user.name, data.user.email);
-    const options = { where: { id: data.id } };
-    const possibleUser = await this._userRepository.findOne(options);
-    if (!possibleUser) {
-      throw new NotFoundException('User not found 4');
+    const user = new UserEntity();
+    user.name = data.user.name;
+    user.email = data.user.email;
+    const updateOp = await this._userRepository.update(data.id, user);
+    if (isNil(updateOp)) {
+      throw new HttpException('User not updated', 500);
     }
-    await this._userRepository.update(data.id, user);
-    const updated = pickBy({ ...possibleUser, ...user }, value => !isNil(value));
-    return updated as object as UserEntity;
+    const updatedUser = await this.findMe(data.id);
+    return updatedUser;
   }
 
-  public async deleteOne(id: string): Promise<boolean> {
+  public async updatePassword(data: { id: string; password: string }): Promise<boolean> {
+    const user = new UserEntity();
+    user.password = data.password;
+    const updateOperation = await this._userRepository.update(data.id, user);
+    if (isNil(updateOperation)) {
+      throw new HttpException('Password not changed', 500);
+    }
+    return isNotNil(updateOperation.affected);
+  }
+
+  public async removeOne(id: string): Promise<void> {
     const options = { where: { id } };
     const possibleUser = await this._userRepository.findOne(options);
-    if (!possibleUser) {
-      throw new NotFoundException('User not found 5');
+    if (isNil(possibleUser)) {
+      throw new NotFoundException('Not possible to complete the operation');
     }
-    return isNil(possibleUser);
+    await this._userRepository.delete(id);
   }
 }

@@ -24,7 +24,7 @@ import { GlobalInterceptor } from './resources/interceptor/global.interceptor';
     CacheModule.registerAsync({
       useFactory: async () => ({
         store: await redisStore({
-          ttl: 3600 * 10,
+          ttl: 3600 * 5,
         }),
       }),
       isGlobal: true,
