@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user-dto';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user-dto';
@@ -14,7 +14,7 @@ export class UserController {
   constructor(private readonly _userService: UserService) {}
 
   @Post()
-  public async createOneUser(
+  public async createOne(
     @Body()
     user: CreateUserDto,
     @Body('password', PasswordHashingPipe)
@@ -28,25 +28,13 @@ export class UserController {
   }
 
   @UseGuards(AuthorizationGuard)
-  @Get(':id')
-  public async getOneUser(
-    @Param('id')
-    id: string,
+  @Get('me')
+  public async findMe(
+    @Req()
+    req: UserReq,
   ): Promise<Response<UserEntity>> {
-    const possibleUser = await this._userService.getOne(id);
-    return {
-      message: 'User retrieved successfully',
-      data: possibleUser,
-    };
-  }
-
-  @UseGuards(AuthorizationGuard)
-  @Get(':email')
-  public async getOneUserByEmail(
-    @Param('email')
-    email: string,
-  ): Promise<Response<UserEntity>> {
-    const possibleUser = await this._userService.getOneByEmail(email);
+    const id = req.user.sub;
+    const possibleUser = await this._userService.findMe(id);
     return {
       message: 'User retrieved successfully',
       data: possibleUser,
@@ -55,7 +43,7 @@ export class UserController {
 
   @UseGuards(AuthorizationGuard)
   @Patch()
-  public async updateOneUser(
+  public async updateOne(
     @Req()
     req: UserReq,
     @Body()
@@ -69,8 +57,8 @@ export class UserController {
   }
 
   @UseGuards(AuthorizationGuard)
-  @Patch('change-password')
-  public async changePassword(
+  @Patch('update-password')
+  public async updatePassword(
     @Req()
     req: UserReq,
     @Body()
@@ -78,7 +66,7 @@ export class UserController {
     @Body('password', PasswordHashingPipe)
     password: string,
   ): Promise<Response<void>> {
-    await this._userService.changePassword({ id: req.user.sub, password });
+    await this._userService.updatePassword({ id: req.user.sub, password });
     return {
       message: 'Password changed successfully',
     };
@@ -86,11 +74,11 @@ export class UserController {
 
   @UseGuards(AuthorizationGuard)
   @Delete()
-  public async deleteOneUser(
+  public async deleteOne(
     @Req()
     req: UserReq,
   ): Promise<Response<void>> {
-    await this._userService.deleteOne(req.user.sub);
+    await this._userService.removeOne(req.user.sub);
     return {
       message: 'User deleted successfully',
     };

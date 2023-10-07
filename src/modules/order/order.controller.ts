@@ -8,26 +8,27 @@ import { CacheInterceptor } from '@nestjs/cache-manager';
 import { AuthorizationGuard } from 'src/shared/guards/authorization.guard';
 import { UserReq } from 'src/types/user-req';
 
-@UseGuards(AuthorizationGuard)
-@Controller('order')
+@Controller('orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
+  @UseGuards(AuthorizationGuard)
   @Post()
-  async create(
+  async createOne(
     @Req()
     req: UserReq,
     @Body()
     createOrderDto: CreateOrderDto,
   ): Promise<Response<OrderEntity>> {
     const userId = req.user.sub;
-    const possibleOrder = await this.orderService.create({ userId, createOrderDto });
+    const possibleOrder = await this.orderService.createOne({ userId, createOrderDto });
     return {
       message: 'Order created successfully',
       data: possibleOrder,
     };
   }
 
+  @UseGuards(AuthorizationGuard)
   @Get()
   @UseInterceptors(CacheInterceptor)
   async findAll(
@@ -42,6 +43,7 @@ export class OrderController {
     };
   }
 
+  @UseGuards(AuthorizationGuard)
   @Get(':id')
   @UseInterceptors(CacheInterceptor)
   async findOne(
@@ -58,6 +60,7 @@ export class OrderController {
     };
   }
 
+  @UseGuards(AuthorizationGuard)
   @Patch(':id')
   async update(
     @Req() req: UserReq,
@@ -65,13 +68,14 @@ export class OrderController {
     @Body() updateOrderDto: UpdateOrderDto,
   ): Promise<Response<OrderEntity>> {
     const userId = req.user.sub;
-    const possibleOrder = await this.orderService.update({ userId, id, updateOrderDto });
+    const possibleOrder = await this.orderService.updateOne({ userId, id, updateOrderDto });
     return {
       message: 'Order updated successfully',
       data: possibleOrder,
     };
   }
 
+  @UseGuards(AuthorizationGuard)
   @Delete(':id')
   async remove(
     @Req()
@@ -79,8 +83,9 @@ export class OrderController {
     @Param('id')
     id: string,
   ): Promise<Response<void>> {
+    console.log(req);
     const userId = req.user.sub;
-    await this.orderService.remove({ userId, id });
+    await this.orderService.removeOne({ userId, id });
     return {
       message: 'Order deleted successfully',
     };

@@ -23,17 +23,8 @@ export class UserService {
     return possibleUser;
   }
 
-  public async getOne(id: string): Promise<UserEntity> {
+  public async findMe(id: string): Promise<UserEntity> {
     const options = { where: { id } };
-    const possibleUser = await this._userRepository.findOne(options);
-    if (isNil(possibleUser)) {
-      throw new NotFoundException('User not found');
-    }
-    return possibleUser;
-  }
-
-  public async getOneByEmail(email: string): Promise<UserEntity> {
-    const options = { where: { email } };
     const possibleUser = await this._userRepository.findOne(options);
     if (isNil(possibleUser)) {
       throw new NotFoundException('User not found');
@@ -49,11 +40,11 @@ export class UserService {
     if (isNil(updateOp)) {
       throw new HttpException('User not updated', 500);
     }
-    const updatedUser = await this.getOne(data.id);
+    const updatedUser = await this.findMe(data.id);
     return updatedUser;
   }
 
-  public async changePassword(data: { id: string; password: string }): Promise<boolean> {
+  public async updatePassword(data: { id: string; password: string }): Promise<boolean> {
     const user = new UserEntity();
     user.password = data.password;
     const updateOperation = await this._userRepository.update(data.id, user);
@@ -63,11 +54,12 @@ export class UserService {
     return isNotNil(updateOperation.affected);
   }
 
-  public async deleteOne(id: string): Promise<void> {
+  public async removeOne(id: string): Promise<void> {
     const options = { where: { id } };
     const possibleUser = await this._userRepository.findOne(options);
-    if (!possibleUser) {
+    if (isNil(possibleUser)) {
       throw new NotFoundException('Not possible to complete the operation');
     }
+    await this._userRepository.delete(id);
   }
 }
