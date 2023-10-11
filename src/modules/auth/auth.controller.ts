@@ -9,7 +9,7 @@ import { ApiTags } from '@nestjs/swagger';
 export class AuthController {
   constructor(private readonly _authService: AuthService) {}
 
-  @Post('signin')
+  @Post('sign-in')
   async signIn(@Body() { email, password }: AuthDto): Promise<Response<{ access_token: string }>> {
     const tokenObj = await this._authService.signIn({ email, password });
     return {
