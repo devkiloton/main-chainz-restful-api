@@ -24,5 +24,6 @@ import { UserEntity } from '../user/entities/user.entity';
     }),
     TypeOrmModule.forFeature([UserEntity]),
   ],
+  exports: [AuthService],
 })
 export class AuthModule {}

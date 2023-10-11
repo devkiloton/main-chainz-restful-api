@@ -14,6 +14,9 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+  if (process.env['NODE_ENV'] === 'development') {
+    app.enableCors();
+  }
   setupSwagger(app);
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   await app.listen(process.env['PORT'] || 3000);

@@ -16,22 +16,22 @@ export class UserController {
   constructor(private readonly _userService: UserService) {}
 
   @Post()
-  public async createOne(
+  public async create(
     @Body()
     user: CreateUserDto,
     @Body('password', PasswordHashingPipe)
     password: string,
-  ): Promise<Response<UserEntity>> {
-    const possibleUser = await this._userService.createOne({ user, password });
+  ): Promise<Response<UserEntity & { access_token: string }>> {
+    const possibleUser = await this._userService.create({ user, password });
     return {
       message: 'User created successfully',
-      data: possibleUser,
+      data: { ...possibleUser.entity, access_token: possibleUser.access_token },
     };
   }
 
   @UseGuards(AuthorizationGuard)
   @Get('me')
-  public async findMe(
+  public async find(
     @Req()
     req: UserReq,
   ): Promise<Response<UserEntity>> {
@@ -45,13 +45,13 @@ export class UserController {
 
   @UseGuards(AuthorizationGuard)
   @Patch()
-  public async updateOne(
+  public async update(
     @Req()
     req: UserReq,
     @Body()
     user: UpdateUserDto,
   ): Promise<Response<UserEntity>> {
-    const possibleUser = await this._userService.updateOne({ id: req.user.sub, user });
+    const possibleUser = await this._userService.update({ id: req.user.sub, user });
     return {
       message: 'User updated successfully',
       data: possibleUser,
@@ -76,11 +76,11 @@ export class UserController {
 
   @UseGuards(AuthorizationGuard)
   @Delete()
-  public async deleteOne(
+  public async delete(
     @Req()
     req: UserReq,
   ): Promise<Response<void>> {
-    await this._userService.removeOne(req.user.sub);
+    await this._userService.remove(req.user.sub);
     return {
       message: 'User deleted successfully',
     };
