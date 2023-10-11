@@ -14,7 +14,7 @@ export class OrderService {
     @InjectRepository(UserEntity) private readonly _userRepository: Repository<UserEntity>,
   ) {}
 
-  public async createOne(data: { userId: string; createOrderDto: CreateOrderDto }): Promise<OrderEntity> {
+  public async create(data: { userId: string; createOrderDto: CreateOrderDto }): Promise<OrderEntity> {
     const order = new OrderEntity();
     order.currencyCode = data.createOrderDto.currencyCode;
     order.amount = data.createOrderDto.amount;
@@ -51,7 +51,7 @@ export class OrderService {
     return orders;
   }
 
-  public async findOne(data: { id: string; userId: string }): Promise<OrderEntity> {
+  public async find(data: { id: string; userId: string }): Promise<OrderEntity> {
     const options: FindOneOptions<OrderEntity> = {
       where: { id: data.id, user: { id: data.userId } },
       relations: {
@@ -65,7 +65,7 @@ export class OrderService {
     return possibleOrder;
   }
 
-  public async updateOne(data: { userId: string; id: string; updateOrderDto: UpdateOrderDto }): Promise<OrderEntity> {
+  public async update(data: { userId: string; id: string; updateOrderDto: UpdateOrderDto }): Promise<OrderEntity> {
     const options = {
       where: { id: data.id, user: { id: data.userId } },
       relations: { user: true },
@@ -94,7 +94,7 @@ export class OrderService {
     return possibleOrder;
   }
 
-  public async removeOne(data: { userId: string; id: string }): Promise<void> {
+  public async remove(data: { userId: string; id: string }): Promise<void> {
     const order = await this._orderRepository.findOne({
       where: { id: data.id, user: { id: data.userId } },
       relations: { user: true },

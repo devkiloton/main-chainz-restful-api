@@ -15,14 +15,14 @@ export class OrderController {
 
   @UseGuards(AuthorizationGuard)
   @Post()
-  async createOne(
+  async create(
     @Req()
     req: UserReq,
     @Body()
     createOrderDto: CreateOrderDto,
   ): Promise<Response<OrderEntity>> {
     const userId = req.user.sub;
-    const possibleOrder = await this.orderService.createOne({ userId, createOrderDto });
+    const possibleOrder = await this.orderService.create({ userId, createOrderDto });
     return {
       message: 'Order created successfully',
       data: possibleOrder,
@@ -47,14 +47,14 @@ export class OrderController {
   @UseGuards(AuthorizationGuard)
   @Get(':id')
   @UseInterceptors(CacheInterceptor)
-  async findOne(
+  async find(
     @Req()
     req: UserReq,
     @Param('id')
     id: string,
   ): Promise<Response<OrderEntity>> {
     const userId = req.user.sub;
-    const possibleOrder = await this.orderService.findOne({ id, userId });
+    const possibleOrder = await this.orderService.find({ id, userId });
     return {
       message: 'Order retrieved successfully',
       data: possibleOrder,
@@ -69,7 +69,7 @@ export class OrderController {
     @Body() updateOrderDto: UpdateOrderDto,
   ): Promise<Response<OrderEntity>> {
     const userId = req.user.sub;
-    const possibleOrder = await this.orderService.updateOne({ userId, id, updateOrderDto });
+    const possibleOrder = await this.orderService.update({ userId, id, updateOrderDto });
     return {
       message: 'Order updated successfully',
       data: possibleOrder,
@@ -86,7 +86,7 @@ export class OrderController {
   ): Promise<Response<void>> {
     console.log(req);
     const userId = req.user.sub;
-    await this.orderService.removeOne({ userId, id });
+    await this.orderService.remove({ userId, id });
     return {
       message: 'Order deleted successfully',
     };

@@ -6,12 +6,19 @@ import { Repository } from 'typeorm';
 import { UpdateUserDto } from './dto/update-user-dto';
 import { CreateUserDto } from './dto/create-user-dto';
 import { isNotNil } from 'ramda';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectRepository(UserEntity) private readonly _userRepository: Repository<UserEntity>) {}
+  constructor(
+    @InjectRepository(UserEntity) private readonly _userRepository: Repository<UserEntity>,
+    private readonly _authService: AuthService,
+  ) {}
 
-  public async createOne(data: { user: CreateUserDto; password: string }): Promise<UserEntity> {
+  public async create(data: {
+    user: CreateUserDto;
+    password: string;
+  }): Promise<{ entity: UserEntity; access_token: string }> {
     const userObj = new UserEntity();
     userObj.name = data.user.name;
     userObj.email = data.user.email;
@@ -20,7 +27,8 @@ export class UserService {
     if (isNil(possibleUser)) {
       throw new HttpException('User not created', 500);
     }
-    return possibleUser;
+    const { access_token } = await this._authService.signIn({ email: possibleUser.email, password: data.password });
+    return { entity: possibleUser, access_token };
   }
 
   public async findMe(id: string): Promise<UserEntity> {
@@ -32,7 +40,7 @@ export class UserService {
     return possibleUser;
   }
 
-  public async updateOne(data: { id: string; user: UpdateUserDto }): Promise<UserEntity> {
+  public async update(data: { id: string; user: UpdateUserDto }): Promise<UserEntity> {
     const user = new UserEntity();
     user.name = data.user.name;
     user.email = data.user.email;
@@ -54,7 +62,7 @@ export class UserService {
     return isNotNil(updateOperation.affected);
   }
 
-  public async removeOne(id: string): Promise<void> {
+  public async remove(id: string): Promise<void> {
     const options = { where: { id } };
     const possibleUser = await this._userRepository.findOne(options);
     if (isNil(possibleUser)) {
