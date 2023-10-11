@@ -1,13 +1,13 @@
 import { Body, Controller, Delete, Get, Patch, Post, Req, UseGuards } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user-dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UserService } from './user.service';
-import { UpdateUserDto } from './dto/update-user-dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { PasswordHashingPipe } from 'src/resources/pipes/password-hashing.pipe';
 import { Response } from 'src/types/response';
 import { UserEntity } from './entities/user.entity';
 import { AuthorizationGuard } from 'src/shared/guards/authorization.guard';
 import { UserReq } from 'src/types/user-req';
-import { UpdatePasswordDto } from './dto/update-password-dto';
+import { UpdatePasswordDto } from './dto/update-password.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('/user')

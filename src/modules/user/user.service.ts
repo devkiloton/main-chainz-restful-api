@@ -3,8 +3,8 @@ import { UserEntity } from './entities/user.entity';
 import { isNil } from 'lodash';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UpdateUserDto } from './dto/update-user-dto';
-import { CreateUserDto } from './dto/create-user-dto';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { isNotNil } from 'ramda';
 import { AuthService } from '../auth/auth.service';
 
