@@ -14,7 +14,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
         this._consoleLogger.error(`${exception} - ${status}`);
         break;
     }
-    console.log(exception);
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
