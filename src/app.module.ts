@@ -12,6 +12,7 @@ import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { GlobalInterceptor } from './resources/interceptor/global.interceptor';
 import { CurrenciesModule } from './modules/currencies/currencies.module';
+import { FiatCurrenciesModule } from './modules/fiat-currencies/fiat-currencies.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { CurrenciesModule } from './modules/currencies/currencies.module';
     OrderModule,
     AuthModule,
     CurrenciesModule,
+    FiatCurrenciesModule,
   ],
   providers: [
     {
