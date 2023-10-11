@@ -1,15 +1,12 @@
-import { Column, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { Column, Entity, PrimaryColumn, Unique, UpdateDateColumn } from 'typeorm';
 
 @Entity({ name: 'currencies' })
 export class Currency {
-  @PrimaryColumn()
+  @PrimaryColumn({ length: 8 })
   public id!: string;
 
-  @Column({ length: 40, nullable: false })
+  @Column({ length: 40, nullable: false, unique: true })
   public name!: string;
-
-  @Column({ length: 8, nullable: false })
-  public ticker!: string;
 
   @Column({ nullable: false })
   public price!: number;
