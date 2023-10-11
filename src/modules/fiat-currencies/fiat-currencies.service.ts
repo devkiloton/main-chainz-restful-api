@@ -4,7 +4,7 @@ import { UpdateFiatCurrencyDto } from './dto/update-fiat-currency.dto';
 
 @Injectable()
 export class FiatCurrenciesService {
-  create(createFiatCurrencyDto: CreateFiatCurrencyDto) {
+  create(_createFiatCurrencyDto: CreateFiatCurrencyDto) {
     return 'This action adds a new fiatCurrency';
   }
 
@@ -16,7 +16,7 @@ export class FiatCurrenciesService {
     return `This action returns a #${id} fiatCurrency`;
   }
 
-  update(id: number, updateFiatCurrencyDto: UpdateFiatCurrencyDto) {
+  update(id: number, _updateFiatCurrencyDto: UpdateFiatCurrencyDto) {
     return `This action updates a #${id} fiatCurrency`;
   }
 
