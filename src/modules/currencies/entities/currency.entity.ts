@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { Column, Entity, PrimaryColumn, Unique, UpdateDateColumn } from 'typeorm';
 
 @Entity({ name: 'currencies' })
@@ -17,6 +18,7 @@ export class Currency {
   @Column({ nullable: false })
   public marketCap!: number;
 
+  @Exclude()
   @UpdateDateColumn({ name: 'updated_at' })
   public updatedAt!: Date;
 }

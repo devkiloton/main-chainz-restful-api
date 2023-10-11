@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import { Column, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 
 export class FiatCurrency {
@@ -7,6 +8,7 @@ export class FiatCurrency {
   public rate!: number;
   @Column({ length: 5, nullable: false, unique: true })
   public symbol!: string;
+  @Exclude()
   @UpdateDateColumn({ name: 'updated_at' })
   public updatedAt!: Date;
 }
