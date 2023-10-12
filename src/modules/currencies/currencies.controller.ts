@@ -14,6 +14,6 @@ export class CurrenciesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.currenciesService.findOne(+id);
+    return this.currenciesService.findOne(id);
   }
 }
