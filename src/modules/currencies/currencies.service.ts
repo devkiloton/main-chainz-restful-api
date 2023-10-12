@@ -1,13 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateCurrencyDto } from './dto/create-currency.dto';
-import { UpdateCurrencyDto } from './dto/update-currency.dto';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Currency } from './entities/currency.entity';
+import { ConfigService } from '@nestjs/config';
+import fetch from 'cross-fetch';
 
 @Injectable()
 export class CurrenciesService {
-  constructor(@InjectRepository(Currency) private readonly _currencyRepository: Repository<Currency>) {}
+  private readonly logger = new Logger(CurrenciesService.name);
+
+  constructor(
+    @InjectRepository(Currency) private readonly _currencyRepository: Repository<Currency>,
+    private readonly _configService: ConfigService,
+  ) {}
 
   async create(createCurrencyDto: CreateCurrencyDto): Promise<void> {
     const currency = new Currency();
@@ -33,15 +40,39 @@ export class CurrenciesService {
     return possibleFiatCurrency;
   }
 
-  async update(data: { id: string; updateCurrencyDto: UpdateCurrencyDto }): Promise<void> {
-    const currency = new Currency();
-    currency.id = data.updateCurrencyDto.id;
-    currency.name = data.updateCurrencyDto.name;
-    currency.price = data.updateCurrencyDto.price;
-    currency.marketCap = data.updateCurrencyDto.marketCap;
-    currency.priceChange24h = data.updateCurrencyDto.priceChange24h;
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async update(): Promise<void> {
+    const options = {
+      method: 'GET',
+      headers: {
+        'accept': 'application/json',
+        'X-API-KEY': this._configService.get('COINSTATS_API_KEY'),
+      },
+    };
 
-    await this._currencyRepository.update(data.id, currency);
+    const list = await fetch(this._configService.get('COINSTATS_API_URL') + '/coins', options)
+      .then(res => res.json())
+      .then(
+        json =>
+          Object.values(json)[0] as Array<{
+            name: string;
+            price: number;
+            symbol: string;
+            marketCap: number;
+            priceChange1d: number;
+          }>,
+      );
+    const newRows = list.map(crypto => {
+      const currency = new Currency();
+      currency.id = crypto.symbol;
+      currency.name = crypto.name;
+      currency.price = crypto.price;
+      currency.marketCap = crypto.marketCap;
+      currency.priceChange24h = crypto.priceChange1d;
+      return { ...crypto, ...currency };
+    });
+    await this._currencyRepository.save(newRows);
+    this.logger.log('Updating currencies');
   }
 
   async remove(id: string): Promise<void> {

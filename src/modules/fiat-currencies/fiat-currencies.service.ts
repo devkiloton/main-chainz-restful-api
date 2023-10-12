@@ -36,17 +36,18 @@ export class FiatCurrenciesService {
       },
     };
 
-    const list = await fetch('https://openapiv1.coinstats.app/fiats', options)
+    const list = await fetch(this._configService.get('COINSTATS_API_URL') + '/fiats', options)
       .then(res => res.json())
       .then(json => json as Array<{ name: string; rate: number; symbol: string }>);
-    list.forEach(async fiat => {
+    const newRows = list.map(fiat => {
       const fiatCurrency = new FiatCurrency();
       fiatCurrency.id = fiat.name;
       fiatCurrency.rate = fiat.rate;
       fiatCurrency.symbol = fiat.symbol;
-      await this._fiatCurrencyRepository.save(fiatCurrency);
+      return { ...fiat, ...fiatCurrency };
     });
-    this.logger.debug('Updating fiat currencies');
+    await this._fiatCurrencyRepository.save(newRows);
+    this.logger.log('Updating fiat currencies');
   }
 
   async remove(id: string): Promise<void> {
