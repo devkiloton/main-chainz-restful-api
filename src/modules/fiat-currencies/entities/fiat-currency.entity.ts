@@ -5,10 +5,13 @@ import { Column, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 export class FiatCurrency {
   @PrimaryColumn({ length: 3 })
   public id!: string;
-  @Column({ nullable: false, unique: true, type: 'float8' })
+
+  @Column({ nullable: false, type: 'float8' })
   public rate!: number;
+
   @Column({ length: 5, nullable: false, unique: true })
   public symbol!: string;
+
   @Exclude()
   @UpdateDateColumn({ name: 'updated_at' })
   public updatedAt!: Date;
