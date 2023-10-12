@@ -1,21 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { UpdateFiatCurrencyDto } from './dto/update-fiat-currency.dto';
-import { CreateFiatCurrencyDto } from './dto/create-fiat-currency.dto';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { FiatCurrency } from './entities/fiat-currency.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { ConfigService } from '@nestjs/config';
+import fetch from 'cross-fetch';
 @Injectable()
 export class FiatCurrenciesService {
-  constructor(@InjectRepository(FiatCurrency) private readonly _fiatCurrencyRepository: Repository<FiatCurrency>) {}
-
-  async create(_createCurrencyDto: CreateFiatCurrencyDto): Promise<void> {
-    const currency = new FiatCurrency();
-    currency.id = _createCurrencyDto.id;
-    currency.symbol = _createCurrencyDto.symbol;
-    currency.rate = _createCurrencyDto.rate;
-    await this._fiatCurrencyRepository.save(currency);
-  }
+  private readonly logger = new Logger(FiatCurrenciesService.name);
+  constructor(
+    @InjectRepository(FiatCurrency) private readonly _fiatCurrencyRepository: Repository<FiatCurrency>,
+    private readonly _configService: ConfigService,
+  ) {}
 
   async findAll(): Promise<FiatCurrency[]> {
     return await this._fiatCurrencyRepository.find();
@@ -30,12 +26,27 @@ export class FiatCurrenciesService {
     return possibleFiatCurrency;
   }
 
-  async update(data: { id: string; updateCurrencyDto: UpdateFiatCurrencyDto }): Promise<void> {
-    const currency = new FiatCurrency();
-    currency.id = data.updateCurrencyDto.id;
-    currency.symbol = data.updateCurrencyDto.symbol;
-    currency.rate = data.updateCurrencyDto.rate;
-    await this._fiatCurrencyRepository.update(data.id, currency);
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async update(): Promise<void> {
+    const options = {
+      method: 'GET',
+      headers: {
+        'accept': 'application/json',
+        'X-API-KEY': this._configService.get('COINSTATS_API_KEY'),
+      },
+    };
+
+    const list = await fetch('https://openapiv1.coinstats.app/fiats', options)
+      .then(res => res.json())
+      .then(json => json as Array<{ name: string; rate: number; symbol: string }>);
+    list.forEach(async fiat => {
+      const fiatCurrency = new FiatCurrency();
+      fiatCurrency.id = fiat.name;
+      fiatCurrency.rate = fiat.rate;
+      fiatCurrency.symbol = fiat.symbol;
+      await this._fiatCurrencyRepository.save(fiatCurrency);
+    });
+    this.logger.debug('Updating fiat currencies');
   }
 
   async remove(id: string): Promise<void> {

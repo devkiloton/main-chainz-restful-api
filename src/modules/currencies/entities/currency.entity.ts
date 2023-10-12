@@ -9,13 +9,13 @@ export class Currency {
   @Column({ length: 40, nullable: false, unique: true })
   public name!: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, type: 'float8' })
   public price!: number;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, unique: true, type: 'float8' })
   public priceChange24h!: number;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, unique: true, type: 'float8' })
   public marketCap!: number;
 
   @Exclude()

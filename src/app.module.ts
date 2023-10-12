@@ -1,5 +1,5 @@
 import { TypeOrmModule } from '@nestjs/typeorm';
-
+import { ScheduleModule } from '@nestjs/schedule';
 import { ClassSerializerInterceptor, ConsoleLogger, Module } from '@nestjs/common';
 import { PostgresService } from './config/postgres.config.service';
 import { ConfigModule } from '@nestjs/config';
@@ -19,6 +19,7 @@ import { FiatCurrenciesModule } from './modules/fiat-currencies/fiat-currencies.
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       useClass: PostgresService,
       inject: [PostgresService],

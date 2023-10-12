@@ -1,10 +1,11 @@
 import { Exclude } from 'class-transformer';
-import { Column, PrimaryColumn, UpdateDateColumn } from 'typeorm';
+import { Column, Entity, PrimaryColumn, UpdateDateColumn } from 'typeorm';
 
+@Entity({ name: 'fiat-currencies' })
 export class FiatCurrency {
   @PrimaryColumn({ length: 3 })
   public id!: string;
-  @Column({ length: 40, nullable: false, unique: true })
+  @Column({ nullable: false, unique: true, type: 'float8' })
   public rate!: number;
   @Column({ length: 5, nullable: false, unique: true })
   public symbol!: string;
