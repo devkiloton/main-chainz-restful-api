@@ -19,8 +19,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "typeorm": "typeorm-ts-node-esm --dataSource src/db/data-source-cli.ts",
-    "migration:in": "npm run typeorm migration:generate"
+    "migration:path": "npm run typeorm migration:create",
+    "migration:run": "typeorm migration:run"
   },
   "dependencies": {
     "@nestjs/cache-manager": "^2.1.0",
@@ -30,12 +30,15 @@
     "@nestjs/jwt": "^10.1.1",
     "@nestjs/mapped-types": "^2.0.2",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/schedule": "^3.0.4",
     "@nestjs/swagger": "^7.1.13",
+    "@nestjs/throttler": "^5.0.0",
     "@nestjs/typeorm": "^10.0.0",
     "cache-manager": "^5.2.3",
     "cache-manager-redis-yet": "^4.1.2",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "cross-fetch": "^4.0.0",
     "lodash": "^4.17.21",
     "pg": "^8.11.3",
     "ramda": "^0.29.1",
