@@ -14,6 +14,6 @@ export class FiatCurrenciesController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.fiatCurrenciesService.findOne(+id);
+    return this.fiatCurrenciesService.findOne(id);
   }
 }
