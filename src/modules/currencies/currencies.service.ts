@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { Currency } from './entities/currency.entity';
 import { ConfigService } from '@nestjs/config';
 import fetch from 'cross-fetch';
+import { formatNumber } from 'src/resources/helpers/unit-cutter';
 
 @Injectable()
 export class CurrenciesService {
@@ -28,7 +29,10 @@ export class CurrenciesService {
   }
 
   async findAll(): Promise<Currency[]> {
-    return await this._currencyRepository.find();
+    return (await this._currencyRepository.find()).map(currency => ({
+      ...currency,
+      price: formatNumber(currency.price),
+    }));
   }
 
   async findOne(id: string): Promise<Currency> {
