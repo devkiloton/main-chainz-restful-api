@@ -2,7 +2,7 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { CreateCurrencyDto } from './dto/create-currency.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindManyOptions, Repository } from 'typeorm';
 import { Currency } from './entities/currency.entity';
 import { ConfigService } from '@nestjs/config';
 import fetch from 'cross-fetch';
@@ -29,7 +29,9 @@ export class CurrenciesService {
   }
 
   async findAll(): Promise<Currency[]> {
-    return (await this._currencyRepository.find()).map(currency => ({
+    // options to return descending marketCap column
+    const options: FindManyOptions<Currency> = { order: { marketCap: 'DESC' } };
+    return (await this._currencyRepository.find(options)).map(currency => ({
       ...currency,
       price: formatNumber(currency.price),
     }));
@@ -54,7 +56,9 @@ export class CurrenciesService {
       },
     };
 
-    const list = await fetch(this._configService.get('COINSTATS_API_URL') + '/coins', options)
+    const coinstatsUrl = this._configService.get('COINSTATS_API_URL');
+
+    const list = await fetch(coinstatsUrl + '/coins', options)
       .then(res => res.json())
       .then(
         json =>
@@ -66,6 +70,9 @@ export class CurrenciesService {
             priceChange1d: number;
           }>,
       );
+    // monero is not in the list of coins
+    const monero = await fetch(coinstatsUrl + '/coins/monero', options);
+    list.push(await monero.json());
     const newRows = list.map(crypto => {
       const currency = new Currency();
       currency.id = crypto.symbol;
