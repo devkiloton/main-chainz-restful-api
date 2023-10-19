@@ -1,16 +1,20 @@
-import { Column, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { UserEntity } from '../../user/entities/user.entity';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity({ name: 'auth' })
 export class AuthEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid', { name: 'id' })
   public readonly id!: string;
 
-  @Column({ nullable: true })
-  public accessToken!: string;
+  @Column({ nullable: true, type: 'text' })
+  public accessToken!: string | null;
 
-  @Column({ nullable: true })
-  public refreshToken!: string;
+  @Column({ nullable: true, type: 'text' })
+  public refreshToken!: string | null;
 
   @UpdateDateColumn({ name: 'updated_at' })
   public updatedAt!: Date;
+
+  @OneToOne(() => UserEntity, user => user.auth)
+  public user!: UserEntity;
 }
