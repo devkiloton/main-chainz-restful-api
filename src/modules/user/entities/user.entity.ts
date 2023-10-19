@@ -33,7 +33,7 @@ export class UserEntity {
   public readonly deletedAt!: Date | null;
   @OneToMany(() => OrderEntity, order => order.user)
   public orders!: OrderEntity[];
-  @OneToOne(() => AuthEntity)
+  @OneToOne(() => AuthEntity, auth => auth.user, { cascade: true })
   @JoinColumn()
   public auth!: AuthEntity;
 }
