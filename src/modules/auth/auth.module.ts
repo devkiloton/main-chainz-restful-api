@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserEntity } from '../user/entities/user.entity';
+import { AuthEntity } from './entities/auth.entity';
 
 @Module({
   controllers: [AuthController],
@@ -22,7 +23,7 @@ import { UserEntity } from '../user/entities/user.entity';
       inject: [ConfigService],
       global: true,
     }),
-    TypeOrmModule.forFeature([UserEntity]),
+    TypeOrmModule.forFeature([UserEntity, AuthEntity]),
   ],
   exports: [AuthService],
 })

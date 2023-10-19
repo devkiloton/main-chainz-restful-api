@@ -16,6 +16,7 @@ export class AuthService {
   ) {}
   public async signIn(data: { email: string; password: string }): Promise<{ access_token: string }> {
     const options = { where: { email: data.email } };
+    // #TODO: Should be a service, not the repository
     const possibleUser = await this._userRepository.findOne(options);
     if (isNil(possibleUser)) {
       throw new UnauthorizedException('Invalid credentials');

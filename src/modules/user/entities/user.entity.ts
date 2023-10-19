@@ -5,10 +5,13 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { AuthEntity } from '../../auth/entities/auth.entity';
 
 @Entity({ name: 'users' })
 export class UserEntity {
@@ -30,4 +33,7 @@ export class UserEntity {
   public readonly deletedAt!: Date | null;
   @OneToMany(() => OrderEntity, order => order.user)
   public orders!: OrderEntity[];
+  @OneToOne(() => AuthEntity)
+  @JoinColumn()
+  public auth!: AuthEntity;
 }
