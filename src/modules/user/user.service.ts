@@ -4,21 +4,14 @@ import { isNil } from 'lodash';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { CreateUserDto } from './dto/create-user.dto';
 import { isNotNil } from 'ramda';
-import { AuthService } from '../auth/auth.service';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectRepository(UserEntity) private readonly _userRepository: Repository<UserEntity>,
-    private readonly _authService: AuthService,
-  ) {}
+  constructor(@InjectRepository(UserEntity) private readonly _userRepository: Repository<UserEntity>) {}
 
-  public async create(data: {
-    user: CreateUserDto;
-    password: string;
-  }): Promise<{ entity: UserEntity; access_token: string }> {
+  public async create(data: { user: CreateUserDto; password: string }): Promise<UserEntity> {
     const userObj = new UserEntity();
     userObj.name = data.user.name;
     userObj.email = data.user.email;
@@ -27,16 +20,21 @@ export class UserService {
     if (isNil(possibleUser)) {
       throw new HttpException('User not created', 500);
     }
-    const { access_token } = await this._authService.signIn({ email: possibleUser.email, password: data.password });
-    return { entity: possibleUser, access_token };
+    return possibleUser;
   }
 
-  public async findMe(id: string): Promise<UserEntity> {
-    const options = { where: { id } };
+  public async find(id: string, relation?: string): Promise<UserEntity> {
+    const options = { where: { id }, relations: relation ? [relation] : undefined };
     const possibleUser = await this._userRepository.findOne(options);
     if (isNil(possibleUser)) {
       throw new NotFoundException('User not found');
     }
+    return possibleUser;
+  }
+
+  public async findOneByEmail(email: string, relation?: Array<string>): Promise<UserEntity | null> {
+    const options = { where: { email }, relations: isNil(relation?.length) ? undefined : relation };
+    const possibleUser = await this._userRepository.findOne(options);
     return possibleUser;
   }
 
@@ -48,7 +46,7 @@ export class UserService {
     if (isNil(updateOp)) {
       throw new HttpException('User not updated', 500);
     }
-    const updatedUser = await this.findMe(data.id);
+    const updatedUser = await this.find(data.id);
     return updatedUser;
   }
 
