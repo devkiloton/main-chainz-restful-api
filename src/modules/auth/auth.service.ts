@@ -38,6 +38,8 @@ export class AuthService {
 
     const tokens: Auth = await this.getTokens(possibleUser.id, possibleUser.name);
     await this.updateRefreshToken(possibleUser, tokens.refresh_token);
+    // #TODO: send email to user alerting him that his account has been logged in
+    await this._emailService.sendEmailResetPasswordCode({ receiver: possibleUser.email, code: 123456 });
 
     return tokens;
   }
@@ -46,6 +48,8 @@ export class AuthService {
     const possibleUser = await this._userService.create({ user: data, password: data.password });
     const tokens: Auth = await this.getTokens(possibleUser.id, possibleUser.name);
     await this.createAuth(possibleUser, tokens);
+    // #TODO: send email to user to verify his email
+    await this._emailService.sendEmailResetPasswordCode({ receiver: possibleUser.email, code: 123456 });
 
     return tokens;
   }
@@ -82,6 +86,8 @@ export class AuthService {
     const codeMatches = await this._hashService.compareHash(code, possibleUser.auth.authCode ?? 'UNKNOWN');
     if (!codeMatches) throw new ForbiddenException('Access Denied');
     this._authRepository.update(possibleUser.auth.id, { authCode: null, accessToken: null, refreshToken: null });
+    // #TODO: send email thanking his choice
+    await this._emailService.sendEmailResetPasswordCode({ receiver: email, code: 123456 });
   }
 
   public async createAuth(user: UserEntity, tokens: Auth) {
