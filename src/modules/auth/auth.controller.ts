@@ -48,11 +48,29 @@ export class AuthController {
     };
   }
 
-  @Post('reset-password')
-  async resetPassword(): Promise<Response<void>> {
+  // #TODO: add limitation of 3 attempts per hour
+  @Post('emit-code')
+  async emitCode(
+    @Body('email')
+    email: string,
+  ): Promise<Response<void>> {
     // #TODO: Froze any payout for 10 minutes after reset and send email to user advertising the reset with option to froze the whole account
+    await this._authService.emitCode(email);
     return {
       message: 'Password reset successfully',
+    };
+  }
+
+  @Post('verify-code')
+  async verifyCode(
+    @Body('email')
+    email: string,
+    @Body('code')
+    code: string,
+  ): Promise<Response<void>> {
+    await this._authService.verifyCode(email, code);
+    return {
+      message: 'User verified successfully',
     };
   }
 
