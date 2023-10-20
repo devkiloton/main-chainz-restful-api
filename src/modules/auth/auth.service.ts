@@ -12,6 +12,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '../user/entities/user.entity';
 import { Auth } from './types/auth';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +22,7 @@ export class AuthService {
     private readonly _userService: UserService,
     private readonly _jwtService: JwtService,
     private readonly _configService: ConfigService,
+    private readonly _emailService: EmailService,
   ) {}
 
   public async signIn(data: SignInDto): Promise<Auth> {
@@ -53,6 +55,33 @@ export class AuthService {
     await this._authRepository.update(user.auth.id, {
       refreshToken: hashedRefreshToken,
     });
+  }
+
+  public async emitCode(email: string) {
+    // #TODO: create a table to just add the code and the email and the time of the request and then check if the code is valid and the time is valid
+    // to avoid error in the request and expose the user to a brute force attack
+    const possibleUser = await this._userService.findOneByEmail(email, ['auth']);
+    if (isNil(possibleUser)) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const code = Math.floor(100000 + Math.random() * 900000);
+    const hashedCode = await this._hashService.generateHash(code.toString());
+    await this._authRepository.update(possibleUser.auth.id, { authCode: hashedCode, codeUpdatedAt: new Date() });
+    await this._emailService.sendEmailResetPasswordCode({ receiver: email, code });
+  }
+
+  public async verifyCode(email: string, code: string) {
+    const possibleUser = await this._userService.findOneByEmail(email, ['auth']);
+    if (isNil(possibleUser)) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (possibleUser.auth.codeUpdatedAt.getTime() + 1000 * 60 * 5 < Date.now())
+      throw new ForbiddenException('Access Denied');
+
+    const codeMatches = await this._hashService.compareHash(code, possibleUser.auth.authCode ?? 'UNKNOWN');
+    if (!codeMatches) throw new ForbiddenException('Access Denied');
+    this._authRepository.update(possibleUser.auth.id, { authCode: null, accessToken: null, refreshToken: null });
   }
 
   public async createAuth(user: UserEntity, tokens: Auth) {
