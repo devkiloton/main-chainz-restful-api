@@ -12,6 +12,12 @@ export class AuthEntity {
   @Column({ nullable: true, type: 'text' })
   public refreshToken!: string | null;
 
+  @Column({ nullable: true, type: String })
+  public authCode!: string | null;
+
+  @Column({ name: 'code_updated_at', nullable: true, type: 'timestamp' })
+  public codeUpdatedAt!: Date;
+
   @UpdateDateColumn({ name: 'updated_at' })
   public updatedAt!: Date;
 
