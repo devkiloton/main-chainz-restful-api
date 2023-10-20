@@ -1,8 +1,9 @@
+import { EmailModule } from './modules/email/email.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ClassSerializerInterceptor, ConsoleLogger, Module } from '@nestjs/common';
 import { PostgresService } from './config/postgres.config.service';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OrderModule } from './modules/order/order.module';
 import { AllExceptionsFilter } from './resources/filters/exception-filter/all-exceptions.filter';
 import { CacheModule } from '@nestjs/cache-manager';
@@ -14,9 +15,25 @@ import { GlobalInterceptor } from './resources/interceptor/global.interceptor';
 import { CurrenciesModule } from './modules/currencies/currencies.module';
 import { FiatCurrenciesModule } from './modules/fiat-currencies/fiat-currencies.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
+    EmailModule,
+    MailerModule.forRootAsync({
+      useFactory: async (_configService: ConfigService) => ({
+        transport: {
+          host: _configService.get('MAILER_HOST'),
+          port: 465,
+          secure: true,
+          auth: {
+            user: _configService.get('MAILER_USER'),
+            pass: _configService.get('MAILER_PASSWORD'),
+          },
+        },
+      }),
+      inject: [ConfigService],
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
