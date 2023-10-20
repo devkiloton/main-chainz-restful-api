@@ -10,6 +10,7 @@ import { UserReq } from 'src/types/user-req';
 import { AccessTokenGuard } from 'src/shared/guards/access-token.guard';
 import { RefreshTokenGuard } from 'src/shared/guards/refresh-token.guard';
 import { UserReqRefresh } from 'src/types/user-req-refresh';
+import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 
 @ApiTags('/auth')
 @Controller('auth')
@@ -71,6 +72,20 @@ export class AuthController {
     await this._authService.verifyCode(email, code);
     return {
       message: 'User verified successfully',
+    };
+  }
+
+  @UseGuards(UpdatePasswordDto)
+  @Post('reset-password')
+  async resetPassword(
+    @Body()
+    { email, code }: UpdatePasswordDto,
+    @Body('password', PasswordHashingPipe)
+    password: string,
+  ): Promise<Response<void>> {
+    await this._authService.resetPassword({ email, code, password });
+    return {
+      message: 'Password reset successfully',
     };
   }
 

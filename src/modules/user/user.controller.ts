@@ -1,11 +1,9 @@
 import { Body, Controller, Delete, Get, Patch, Req, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { PasswordHashingPipe } from 'src/resources/pipes/password-hashing.pipe';
 import { Response } from 'src/types/response';
 import { UserEntity } from './entities/user.entity';
 import { UserReq } from 'src/types/user-req';
-import { UpdatePasswordDto } from './dto/update-password.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { AccessTokenGuard } from 'src/shared/guards/access-token.guard';
 
@@ -40,22 +38,6 @@ export class UserController {
     return {
       message: 'User updated successfully',
       data: possibleUser,
-    };
-  }
-
-  @UseGuards(AccessTokenGuard)
-  @Patch('update-password')
-  public async updatePassword(
-    @Req()
-    req: UserReq,
-    @Body()
-    _dto: UpdatePasswordDto,
-    @Body('password', PasswordHashingPipe)
-    password: string,
-  ): Promise<Response<void>> {
-    await this._userService.updatePassword({ id: req.user.sub, password });
-    return {
-      message: 'Password changed successfully',
     };
   }
 

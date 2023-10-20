@@ -115,11 +115,11 @@ export class AuthService {
 
     const [access_token, refresh_token] = await Promise.all([
       this._jwtService.signAsync(payload, {
-        secret: this._configService.get<string>('JWT_SECRET'),
+        secret: this._configService.get<string>('JWT_ACCESS_SECRET'),
         expiresIn: '10m',
       }),
       this._jwtService.signAsync(payload, {
-        secret: this._configService.get<string>('JWT_SECRET'),
+        secret: this._configService.get<string>('JWT_REFRESH_SECRET'),
         expiresIn: '2d',
       }),
     ]);
@@ -128,6 +128,21 @@ export class AuthService {
       access_token,
       refresh_token,
     };
+  }
+
+  public async resetPassword(data: { email: string; code: string; password: string }) {
+    const possibleUser = await this._userService.findOneByEmail(data.email, ['auth']);
+    if (isNil(possibleUser)) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (possibleUser.auth.codeUpdatedAt.getTime() + 1000 * 60 * 5 < Date.now())
+      throw new ForbiddenException('Access Denied');
+
+    const codeMatches = await this._hashService.compareHash(data.code, possibleUser.auth.authCode ?? 'UNKNOWN');
+    if (!codeMatches) throw new ForbiddenException('Access Denied');
+    await this._userService.updatePassword({ id: possibleUser.id, password: data.password });
+    this._authRepository.update(possibleUser.auth.id, { authCode: null, accessToken: null, refreshToken: null });
   }
 
   public async refreshTokens(userId: string, refreshToken: string) {
