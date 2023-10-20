@@ -14,7 +14,7 @@ export class EmailService {
       from: this._configService.get<string>('MAILER_USER'),
       subject: 'Testing Nest MailerModule ✔',
       text: 'welcome',
-      html: '<h1>welcome</h1>',
+      html: `<h1>${data.code}</h1>`,
     });
   }
 }
