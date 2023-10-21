@@ -39,7 +39,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
     }),
     ThrottlerModule.forRoot([
       {
-        ttl: 3600 * 2,
+        ttl: 1000 * 2,
         limit: 3,
       },
     ]),
