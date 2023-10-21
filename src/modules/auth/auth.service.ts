@@ -74,8 +74,8 @@ export class AuthService {
     await this._emailService.sendEmailResetPasswordCode({ receiver: email, code });
   }
 
-  public async verifyCode(email: string, code: string) {
-    const possibleUser = await this._userService.findOneByEmail(email, ['auth']);
+  public async verifyCode(data: { email: string; code: string }) {
+    const possibleUser = await this._userService.findOneByEmail(data.email, ['auth']);
     if (isNil(possibleUser)) {
       throw new UnauthorizedException('Invalid credentials');
     }
@@ -83,11 +83,11 @@ export class AuthService {
     if (possibleUser.auth.codeUpdatedAt.getTime() + 1000 * 60 * 5 < Date.now())
       throw new ForbiddenException('Access Denied');
 
-    const codeMatches = await this._hashService.compareHash(code, possibleUser.auth.authCode ?? 'UNKNOWN');
+    const codeMatches = await this._hashService.compareHash(data.code, possibleUser.auth.authCode ?? 'UNKNOWN');
     if (!codeMatches) throw new ForbiddenException('Access Denied');
     this._authRepository.update(possibleUser.auth.id, { authCode: null, accessToken: null, refreshToken: null });
     // #TODO: send email thanking his choice
-    await this._emailService.sendEmailResetPasswordCode({ receiver: email, code: 123456 });
+    await this._emailService.sendEmailResetPasswordCode({ receiver: data.email, code: 123456 });
   }
 
   public async createAuth(user: UserEntity, tokens: Auth) {
@@ -145,10 +145,10 @@ export class AuthService {
     this._authRepository.update(possibleUser.auth.id, { authCode: null, accessToken: null, refreshToken: null });
   }
 
-  public async refreshTokens(userId: string, refreshToken: string) {
-    const user = await this._userService.find(userId, 'auth');
+  public async refreshTokens(data: { userId: string; refreshToken: string }) {
+    const user = await this._userService.find(data.userId, 'auth');
     if (!user || !user.auth.refreshToken) throw new ForbiddenException('Access Denied');
-    const refreshTokenMatches = await this._hashService.compareHash(refreshToken, user.auth.refreshToken);
+    const refreshTokenMatches = await this._hashService.compareHash(data.refreshToken, user.auth.refreshToken);
     if (!refreshTokenMatches) throw new ForbiddenException('Access Denied');
     const tokens = await this.getTokens(user.id, user.name);
     await this.updateRefreshToken(user, tokens.refresh_token);
