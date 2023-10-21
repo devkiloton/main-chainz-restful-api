@@ -63,7 +63,7 @@ export class AuthController {
     // #TODO: Froze any payout for 10 minutes after reset and send email to user advertising the reset with option to froze the whole account
     await this._authService.emitCode(email);
     return {
-      message: 'Password reset successfully',
+      message: 'Code emitted successfully',
     };
   }
 
@@ -93,12 +93,12 @@ export class AuthController {
 
   @UseGuards(RefreshTokenGuard)
   @Get('refresh')
-  refreshTokens(
+  async refreshTokens(
     @Req()
     req: UserReqRefresh,
   ) {
     const userId = req.user.sub;
     const refreshToken = req.user.refreshToken;
-    return this._authService.refreshTokens({ userId, refreshToken });
+    return await this._authService.refreshTokens({ userId, refreshToken });
   }
 }

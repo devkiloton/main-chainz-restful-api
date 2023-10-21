@@ -37,7 +37,7 @@ export class AuthService {
     }
 
     const tokens: Auth = await this.getTokens(possibleUser.id, possibleUser.name);
-    await this.updateRefreshToken(possibleUser, tokens.refresh_token);
+    await this.updateRefreshToken({ user: possibleUser, refreshToken: tokens.refresh_token });
     // #TODO: send email to user alerting him that his account has been logged in
     await this._emailService.sendEmailResetPasswordCode({ receiver: possibleUser.email, code: 123456 });
 
@@ -54,9 +54,9 @@ export class AuthService {
     return tokens;
   }
 
-  public async updateRefreshToken(user: UserEntity, refreshToken: string) {
-    const hashedRefreshToken = await this._hashService.generateHash(refreshToken);
-    await this._authRepository.update(user.auth.id, {
+  public async updateRefreshToken(data: { user: UserEntity; refreshToken: string }) {
+    const hashedRefreshToken = await this._hashService.generateHash(data.refreshToken);
+    await this._authRepository.update(data.user.auth.id, {
       refreshToken: hashedRefreshToken,
     });
   }
@@ -151,7 +151,7 @@ export class AuthService {
     const refreshTokenMatches = await this._hashService.compareHash(data.refreshToken, user.auth.refreshToken);
     if (!refreshTokenMatches) throw new ForbiddenException('Access Denied');
     const tokens = await this.getTokens(user.id, user.name);
-    await this.updateRefreshToken(user, tokens.refresh_token);
+    await this.updateRefreshToken({ user, refreshToken: tokens.refresh_token });
     return tokens;
   }
 }
