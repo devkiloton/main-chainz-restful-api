@@ -11,8 +11,13 @@ export class UpdatePasswordDto {
   @StrongPassword({ message: 'Password is too weak' })
   public password!: string;
 
+  @ApiProperty({
+    example: 'XXXXXX',
+    required: true,
+    description: 'must be at least 6 characters long',
+  })
   @IsNotEmpty({ message: 'Code is required' })
-  @MaxLength(255, { message: 'Code must be at least 6 characters long' })
+  @MaxLength(6, { message: 'Code must be at least 6 characters long' })
   public code!: string;
 
   @ApiProperty({
