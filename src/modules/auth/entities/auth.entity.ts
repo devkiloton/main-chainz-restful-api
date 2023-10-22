@@ -12,11 +12,23 @@ export class AuthEntity {
   @Column({ nullable: true, type: 'text' })
   public refreshToken!: string | null;
 
-  @Column({ nullable: true, type: String })
+  @Column({ nullable: true, type: 'text' })
   public authCode!: string | null;
 
-  @Column({ name: 'code_updated_at', nullable: true, type: 'timestamp' })
-  public codeUpdatedAt!: Date;
+  @Column({ nullable: true, type: 'text' })
+  public signGeneralCode!: string | null;
+
+  @Column({ nullable: true, type: 'text' })
+  public resetPasswordCode!: string | null;
+
+  @Column({ name: 'reset_password_code_updated_at', nullable: true, type: 'timestamp' })
+  public resetPasswordCodeUpdatedAt!: Date;
+
+  @Column({ name: 'sign_in_code_updated_at', nullable: true, type: 'timestamp' })
+  public signGeneralCodeUpdatedAt!: Date;
+
+  @Column({ name: 'auth_code_updated_at', nullable: true, type: 'timestamp' })
+  public authCodeUpdatedAt!: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   public updatedAt!: Date;
