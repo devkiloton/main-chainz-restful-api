@@ -115,7 +115,7 @@ export class AuthService {
    * @throws Throws a {@link ForbiddenException} If the user is not found or the code doesn't match
    * @param data - an object containing the email, the code and the new password of the user
    */
-  public async resetPassword(data: ResetPasswordDto) {
+  public async resetPassword(data: ResetPasswordDto): Promise<void> {
     const possibleUser = await this._userService.findOneByEmail(data.email, ['auth']);
     if (isNil(possibleUser)) {
       throw new UnauthorizedException('Invalid credentials');
