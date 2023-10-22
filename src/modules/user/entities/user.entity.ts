@@ -24,6 +24,8 @@ export class UserEntity {
   @Exclude()
   @Column({ name: 'password', nullable: false, length: 255 })
   public password!: string;
+  @Column({ name: 'is_email_verified', nullable: false, default: false })
+  public isEmailVerified!: boolean;
   @CreateDateColumn({ name: 'created_at' })
   public readonly createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at' })
