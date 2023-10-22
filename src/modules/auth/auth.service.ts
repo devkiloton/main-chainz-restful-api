@@ -62,7 +62,7 @@ export class AuthService {
   public async signUp(data: CreateUserDto): Promise<void> {
     const possibleUser = await this._userService.create({ user: data, password: data.password });
     const tokens: Auth = await this.getTokens({ user: possibleUser, username: possibleUser.name });
-    await this.createAuth(possibleUser, tokens);
+    await this._createAuth(possibleUser, tokens);
     await this._emailService.sendEmailWelcome({ user: possibleUser });
     await this.emitCode({ email: possibleUser.email, type: 'sign-general' });
   }
@@ -148,11 +148,19 @@ export class AuthService {
     };
   }
 
-  public async resetPassword(data: { email: string; code: string; password: string }) {
-    const possibleUser = await this._userService.findOneByEmail(data.email, ['auth']);
-    if (isNil(possibleUser)) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+  /**
+   * @description This method will create a new {@link AuthEntity} object and will save it in the database
+   * @param user - The {@link UserEntity} object
+   * @param tokens - The {@link Auth} object
+   */
+  private async _createAuth(user: UserEntity, tokens: Auth): Promise<void> {
+    const hashedRefreshToken = await this._hashService.generateHash(tokens.refresh_token);
+    const auth = new AuthEntity();
+    auth.user = user;
+    auth.refreshToken = hashedRefreshToken;
+    auth.accessToken = tokens.access_token;
+    await this._authRepository.save(auth);
+  }
 
     if (possibleUser.auth.codeUpdatedAt.getTime() + 1000 * 60 * 5 < Date.now())
       throw new ForbiddenException('Access Denied');
