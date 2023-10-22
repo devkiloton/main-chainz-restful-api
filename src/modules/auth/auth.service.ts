@@ -172,4 +172,16 @@ export class AuthService {
     await this.updateRefreshToken({ user, refreshToken: tokens.refresh_token });
     return tokens;
   }
+
+  /**
+   * @description This method will update the refresh token and the access token in the database
+   * @param data - an object containing the {@link UserEntity} and the {@link Auth} object
+   */
+  public async updateRefreshToken(data: { user: UserEntity; tokens: Auth }) {
+    const hashedRefreshToken = await this._hashService.generateHash(data.tokens.refresh_token);
+    await this._authRepository.update(data.user.auth.id, {
+      refreshToken: hashedRefreshToken,
+      accessToken: data.tokens.access_token,
+    });
+  }
 }
