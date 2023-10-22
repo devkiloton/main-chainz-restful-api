@@ -26,7 +26,7 @@ export class AuthService {
   ) {}
 
   /**
-   * @description This method will try to find a user with the given email and then will compare the password with the hashed password
+   * @description - This method will try to find a user with the given email and then will compare the password with the hashed password
    * if the password matches then it will generate a new access token and refresh token and will update the refresh token in the database, then
    * it will send a log in alert to the user and will emit a code to the user email
    * @throws - {@link NotFoundException} If the user is not found
