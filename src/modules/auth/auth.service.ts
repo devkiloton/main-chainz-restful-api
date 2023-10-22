@@ -54,14 +54,17 @@ export class AuthService {
     this.emitCode({ email: possibleUser.email, type: 'sign-general' });
   }
 
-  public async signUp(data: CreateUserDto): Promise<Auth> {
+  /**
+   * @description - This method will create a new user and will generate a new access token and refresh token with ´isEmailVerified´ set to false in the payload
+   * since the user is not verified yet, then it will send a welcome email to the user and will emit a code to the user email
+   * @param data - {@link CreateUserDto} object containing the `name`, `email` and `password` of the user
+   */
+  public async signUp(data: CreateUserDto): Promise<void> {
     const possibleUser = await this._userService.create({ user: data, password: data.password });
-    const tokens: Auth = await this.getTokens(possibleUser.id, possibleUser.name);
+    const tokens: Auth = await this.getTokens({ user: possibleUser, username: possibleUser.name });
     await this.createAuth(possibleUser, tokens);
-    // #TODO: send email to user to verify his email
-    await this._emailService.sendEmailResetPasswordCode({ receiver: possibleUser.email, code: 123456 });
-
-    return tokens;
+    await this._emailService.sendEmailWelcome({ user: possibleUser });
+    await this.emitCode({ email: possibleUser.email, type: 'sign-general' });
   }
 
   public async updateRefreshToken(data: { user: UserEntity; refreshToken: string }) {
