@@ -25,23 +25,33 @@ export class AuthService {
     private readonly _emailService: EmailService,
   ) {}
 
-  public async signIn(data: SignInDto): Promise<Auth> {
+  /**
+   * @description This method will try to find a user with the given email and then will compare the password with the hashed password
+   * if the password matches then it will generate a new access token and refresh token and will update the refresh token in the database, then
+   * it will send a log in alert to the user and will emit a code to the user email
+   * @throws - {@link NotFoundException} If the user is not found
+   * @throws - {@link UnauthorizedException} If the user is not found or the password doesn't match
+   * @param data - a {@link SignInDto} object containing the `email` and `password`(already hashed) of the user
+   */
+  public async signIn(data: SignInDto): Promise<void> {
     const possibleUser = await this._userService.findOneByEmail(data.email, ['auth']);
     if (isNil(possibleUser)) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new NotFoundException('User not found');
     }
 
     const isMatch = await this._hashService.compareHash(data.password, possibleUser.password);
-    if (isNil(isMatch)) {
+    if (!isMatch) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const tokens: Auth = await this.getTokens(possibleUser.id, possibleUser.name);
-    await this.updateRefreshToken({ user: possibleUser, refreshToken: tokens.refresh_token });
-    // #TODO: send email to user alerting him that his account has been logged in
-    await this._emailService.sendEmailResetPasswordCode({ receiver: possibleUser.email, code: 123456 });
-
-    return tokens;
+    const tokens: Auth = await this.getTokens({ user: possibleUser, username: possibleUser.name });
+    await this.updateRefreshToken({
+      user: possibleUser,
+      refreshToken: tokens.refresh_token,
+      authToken: tokens.access_token,
+    });
+    await this._emailService.logInAlert({ user: possibleUser });
+    this.emitCode({ email: possibleUser.email, type: 'sign-general' });
   }
 
   public async signUp(data: CreateUserDto): Promise<Auth> {
