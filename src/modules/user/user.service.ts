@@ -1,4 +1,4 @@
-import { HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserEntity } from './entities/user.entity';
 import { isNil } from 'lodash';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,9 +17,6 @@ export class UserService {
     userObj.email = data.user.email;
     userObj.password = data.password;
     const possibleUser = await this._userRepository.save(userObj);
-    if (isNil(possibleUser)) {
-      throw new HttpException('User not created', 500);
-    }
     return possibleUser;
   }
 
@@ -42,10 +39,8 @@ export class UserService {
     const user = new UserEntity();
     user.name = data.user.name;
     user.email = data.user.email;
-    const updateOp = await this._userRepository.update(data.id, user);
-    if (isNil(updateOp)) {
-      throw new HttpException('User not updated', 500);
-    }
+    user.isEmailVerified = data.user.isEmailVerified;
+    await this._userRepository.update(data.id, user);
     const updatedUser = await this.find(data.id);
     return updatedUser;
   }
@@ -54,9 +49,6 @@ export class UserService {
     const user = new UserEntity();
     user.password = data.password;
     const updateOperation = await this._userRepository.update(data.id, user);
-    if (isNil(updateOperation)) {
-      throw new HttpException('Password not changed', 500);
-    }
     return isNotNil(updateOperation.affected);
   }
 
