@@ -10,10 +10,10 @@ import { UserReq } from 'src/types/user-req';
 import { AccessTokenGuard } from 'src/shared/guards/access-token.guard';
 import { RefreshTokenGuard } from 'src/shared/guards/refresh-token.guard';
 import { UserReqRefresh } from 'src/types/user-req-refresh';
-import { UpdatePasswordDto } from '../user/dto/update-password.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';
-import { Throttle } from '@nestjs/throttler';
 import { EmitCodeDto } from './dto/emit-code.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('/auth')
 @Controller('auth')
@@ -24,9 +24,11 @@ export class AuthController {
   async signIn(
     @Body()
     { email, password }: SignInDto,
-  ): Promise<Auth> {
-    const userWithAuth = await this._authService.signIn({ email, password });
-    return userWithAuth;
+  ): Promise<Response<void>> {
+    await this._authService.signIn({ email, password });
+    return {
+      message: 'Confirmation email sent',
+    };
   }
 
   @Post('sign-up')
@@ -35,9 +37,11 @@ export class AuthController {
     { name, email }: CreateUserDto,
     @Body('password', PasswordHashingPipe)
     password: string,
-  ): Promise<Auth> {
-    const userWithAuth = await this._authService.signUp({ name, email, password });
-    return userWithAuth;
+  ): Promise<Response<void>> {
+    await this._authService.signUp({ name, email, password });
+    return {
+      message: 'Confirmation email sent',
+    };
   }
 
   @UseGuards(AccessTokenGuard)
@@ -53,42 +57,50 @@ export class AuthController {
   }
 
   // 3 requests per hour
-  // #TODO: Separate the code emissions to specific services, since in the future we might want to emit code for other things
   @Throttle({ default: { limit: 3, ttl: 1000 * 60 * 60 } })
-  @Post('emit-code')
-  async emitCode(
+  @Post('request-reset-password')
+  async requestResetPassword(
     @Body()
     { email }: EmitCodeDto,
   ): Promise<Response<void>> {
-    // #TODO: Froze any payout for 10 minutes after reset and send email to user advertising the reset with option to froze the whole account
-    await this._authService.emitCode(email);
+    await this._authService.requestResetPassword({ email });
     return {
-      message: 'Code emitted successfully',
+      message: 'Reset password email sent',
     };
   }
 
-  @Post('verify-code')
-  async verifyCode(
-    @Body()
-    { email, code }: VerifyCodeDto,
-  ): Promise<Response<void>> {
-    await this._authService.verifyCode({ email, code });
-    return {
-      message: 'User verified successfully',
-    };
-  }
-
+  @Throttle({ default: { limit: 3, ttl: 1000 * 60 * 60 } })
   @Patch('reset-password')
   async resetPassword(
     @Body()
-    { email, code }: UpdatePasswordDto,
+    { email, code }: ResetPasswordDto,
     @Body('password', PasswordHashingPipe)
     password: string,
   ): Promise<Response<void>> {
     await this._authService.resetPassword({ email, code, password });
     return {
-      message: 'Password reset successfully',
+      message: 'Password changed successfully',
     };
+  }
+
+  @Post('verify-sign-general')
+  async verifySignGenerel(
+    @Body()
+    { email, code }: VerifyCodeDto,
+  ): Promise<Auth> {
+    const tokens = await this._authService.verifySignGeneral({ email, code });
+    return tokens;
+  }
+
+  // 5 requests per hour
+  @Throttle({ default: { limit: 5, ttl: 1000 * 60 * 60 } })
+  @Post('verify-reset-password')
+  async verifyResetPasswordCode(
+    @Body()
+    { email, code }: VerifyCodeDto,
+  ): Promise<boolean> {
+    const isValid = await this._authService.verifyResetPasswordCode({ email, code });
+    return isValid;
   }
 
   @UseGuards(RefreshTokenGuard)
@@ -96,7 +108,7 @@ export class AuthController {
   async refreshTokens(
     @Req()
     req: UserReqRefresh,
-  ) {
+  ): Promise<Auth> {
     const userId = req.user.sub;
     const refreshToken = req.user.refreshToken;
     return await this._authService.refreshTokens({ userId, refreshToken });
