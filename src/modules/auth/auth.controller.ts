@@ -63,12 +63,13 @@ export class AuthController {
     @Body()
     { email }: EmitCodeDto,
   ): Promise<Response<void>> {
-    await this._authService.requestResetPassword({ email });
+    await this._authService.requestResetPassword(email);
     return {
       message: 'Reset password email sent',
     };
   }
 
+  // 3 requests per hour
   @Throttle({ default: { limit: 3, ttl: 1000 * 60 * 60 } })
   @Patch('reset-password')
   async resetPassword(
