@@ -181,22 +181,21 @@ export class AuthService {
     await this._authRepository.save(auth);
   }
 
-    if (possibleUser.auth.codeUpdatedAt.getTime() + 1000 * 60 * 5 < Date.now())
-      throw new ForbiddenException('Access Denied');
-
-    const codeMatches = await this._hashService.compareHash(data.code, possibleUser.auth.authCode ?? 'UNKNOWN');
-    if (!codeMatches) throw new ForbiddenException('Access Denied');
-    await this._userService.updatePassword({ id: possibleUser.id, password: data.password });
-    this._authRepository.update(possibleUser.auth.id, { authCode: null, accessToken: null, refreshToken: null });
-  }
-
-  public async refreshTokens(data: { userId: string; refreshToken: string }) {
+  /**
+   * @description - This method will try to find a user with the given userId and will compare the refresh token with the hashed refresh token,
+   * if the refresh token matches then it will generate a new access token and refresh token and will update the refresh token in the database
+   * @throws Throws a {@link ForbiddenException} If the user is not found or the refresh token doesn't match
+   * @throws Throws a {@link ForbiddenException} If the refresh token is not found
+   * @param data - An object containing the userId and the refreshToken
+   * @returns An {@link Auth} object as {@link Promise} containing the access token and the refresh token
+   */
+  public async refreshTokens(data: { userId: string; refreshToken: string }): Promise<Auth> {
     const user = await this._userService.find(data.userId, 'auth');
-    if (!user || !user.auth.refreshToken) throw new ForbiddenException('Access Denied');
+    if (!user || isNil(user.auth.refreshToken)) throw new ForbiddenException('Access Denied');
     const refreshTokenMatches = await this._hashService.compareHash(data.refreshToken, user.auth.refreshToken);
     if (!refreshTokenMatches) throw new ForbiddenException('Access Denied');
-    const tokens = await this.getTokens(user.id, user.name);
-    await this.updateRefreshToken({ user, refreshToken: tokens.refresh_token });
+    const tokens = await this.getTokens({ user: user, username: user.name });
+    await this.updateRefreshToken({ user, tokens });
     return tokens;
   }
 
