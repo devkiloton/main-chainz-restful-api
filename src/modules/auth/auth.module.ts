@@ -20,6 +20,7 @@ import { EmailService } from '../email/email.service';
       useFactory: (_configService: ConfigService) => {
         return {
           global: true,
+          secret: _configService.get('JWT_ACCESS_SECRET'),
         };
       },
       inject: [ConfigService],
