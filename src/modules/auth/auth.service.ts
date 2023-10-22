@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { HashService } from 'src/shared/services/hash/hash.service';
 import { JwtService } from '@nestjs/jwt';
 import { UserPayload } from 'src/types/user-payload';
@@ -13,6 +13,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { UserEntity } from '../user/entities/user.entity';
 import { Auth } from './types/auth';
 import { EmailService } from '../email/email.service';
+import { UpdateUserDto } from '../user/dto/update-user.dto';
+import { VerifyCodeDto } from './dto/verify-code.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -50,7 +53,7 @@ export class AuthService {
       tokens,
     });
     await this._emailService.logInAlert({ user: possibleUser });
-    this.emitCode({ email: possibleUser.email, type: 'sign-general' });
+    this._emitCode({ email: possibleUser.email, type: 'sign-general' });
   }
 
   /**
@@ -63,7 +66,7 @@ export class AuthService {
     const tokens: Auth = await this.getTokens({ user: possibleUser, username: possibleUser.name });
     await this._createAuth(possibleUser, tokens);
     await this._emailService.sendEmailWelcome({ user: possibleUser });
-    await this.emitCode({ email: possibleUser.email, type: 'sign-general' });
+    await this._emitCode({ email: possibleUser.email, type: 'sign-general' });
   }
 
   /**
@@ -78,33 +81,139 @@ export class AuthService {
     });
   }
 
-  public async emitCode(email: string) {
-    // #TODO: create a table to just add the code and the email and the time of the request and then check if the code is valid and the time is valid
+  /**
+   * @description This method will try to find a user with the given email and will emit a code to the user email according to the type of the purpose of the code
+   * @throws Throws a {@link NotFoundException} If the user is not found
+   * @param data - an object containing the email of the user and the type of the purpose of the code
+   */
+  public async _emitCode(data: { email: string; type: 'sign-general' | 'reset-password' | 'general' }): Promise<void> {
+    // #TODO: create a table to just add the code, the email and the time of the request and then check if the code is valid and the time is valid
     // to avoid error in the request and expose the user to a brute force attack
-    const possibleUser = await this._userService.findOneByEmail(email, ['auth']);
+    const possibleUser = await this._userService.findOneByEmail(data.email, ['auth']);
     if (isNil(possibleUser)) {
-      throw new UnauthorizedException('Invalid credentials');
+      throw new NotFoundException('Invalid credentials');
     }
     const code = Math.floor(100000 + Math.random() * 900000);
     const hashedCode = await this._hashService.generateHash(code.toString());
-    await this._authRepository.update(possibleUser.auth.id, { authCode: hashedCode, codeUpdatedAt: new Date() });
-    await this._emailService.sendEmailResetPasswordCode({ receiver: email, code });
+    switch (data.type) {
+      case 'sign-general':
+        await this._authRepository.update(possibleUser.auth.id, {
+          signGeneralCode: hashedCode,
+          signGeneralCodeUpdatedAt: new Date(),
+        });
+        await this._emailService.sendEmailResetPasswordCode({ receiver: data.email, code: code.toString() });
+        break;
+      case 'reset-password':
+        await this._authRepository.update(possibleUser.auth.id, {
+          resetPasswordCode: hashedCode,
+          resetPasswordCodeUpdatedAt: new Date(),
+        });
+        await this._emailService.sendEmailResetPasswordCode({ receiver: data.email, code: code.toString() });
+        break;
+      case 'general':
+        await this._authRepository.update(possibleUser.auth.id, {
+          authCode: hashedCode,
+          authCodeUpdatedAt: new Date(),
+        });
+        await this._emailService.sendEmailResetPasswordCode({ receiver: data.email, code: code.toString() });
+        break;
+      default:
+        break;
+    }
   }
 
-  public async verifyCode(data: { email: string; code: string }) {
+  /**
+   *  @description - This method will try to find a user with the given email,
+   *  verify the time(5min limit), and will compare the code with the hashed code,
+   * if the code matches then it will generate a new access token and refresh token and will update the refresh token in the database
+   * @throws Throws a {@link NotFoundException} If the user is not found
+   * @throws Throws a {@link ForbiddenException} If the user exceeds the limit of 5min to verify the code
+   * @throws Throws a {@link ForbiddenException} If the code doesn't match
+   * @param data - {@link VerifyCodeDto} object containing the `email` and `code` of the user
+   * @returns An {@link Auth} object as {@link Promise} containing the access token and the refresh token
+   */
+  public async verifyCode(data: VerifyCodeDto): Promise<Auth> {
+    const possibleUser = await this._userService.findOneByEmail(data.email, ['auth']);
+    if (isNil(possibleUser)) {
+      throw new NotFoundException('Invalid credentials');
+    }
+
+    if (possibleUser.auth.authCodeUpdatedAt.getTime() + 1000 * 60 * 5 < Date.now())
+      throw new ForbiddenException('Access Denied');
+
+    const codeMatches = await this._hashService.compareHash(data.code, possibleUser.auth.authCode ?? 'UNKNOWN');
+    if (!codeMatches) throw new ForbiddenException('Access Denied');
+    const tokens = await this.getTokens({ user: possibleUser, username: possibleUser.name });
+    this._authRepository.update(possibleUser.auth.id, {
+      authCode: null,
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+    });
+    return tokens;
+  }
+
+  /**
+   * @description - This method will try to find a user with the given email,
+   *  verify the time(5min limit), and will compare the code with the hashed code,
+   * if the code matches then it will generate a new access token and refresh token and will update the refresh token in the database
+   * @throws Throws a {@link NotFoundException} If the user is not found
+   * @throws Throws a {@link ForbiddenException} If the user exceeds the limit of 5min to verify the code
+   * @throws Throws a {@link ForbiddenException} If the code doesn't match
+   * @param data - {@link VerifyCodeDto} object containing the `email` and `code` of the user
+   * @returns An {@link Auth} object as {@link Promise} containing the access token and the refresh token
+   */
+  public async verifySignGeneral(data: VerifyCodeDto): Promise<Auth> {
+    const possibleUser = await this._userService.findOneByEmail(data.email, ['auth']);
+    if (isNil(possibleUser)) {
+      throw new NotFoundException('Invalid credentials');
+    }
+
+    if (possibleUser.auth.signGeneralCodeUpdatedAt.getTime() + 1000 * 60 * 5 < Date.now())
+      throw new ForbiddenException('Access Denied');
+
+    const codeMatches = await this._hashService.compareHash(data.code, possibleUser.auth.signGeneralCode ?? 'UNKNOWN');
+    if (!codeMatches) throw new ForbiddenException('Access Denied');
+    const tokens = await this.getTokens({ user: possibleUser, username: possibleUser.name });
+    this._authRepository.update(possibleUser.auth.id, {
+      signGeneralCode: null,
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+    });
+
+    if (possibleUser.isEmailVerified) {
+      return tokens;
+    }
+    const user = new UpdateUserDto();
+    user.isEmailVerified = true;
+    await this._userService.update({ id: possibleUser.id, user });
+    return tokens;
+  }
+
+  /**
+   * @description - This method will try to find a user with the given email, verify the time(5min limit),
+   * and will compare the code with the hashed code
+   * @throws Throws a {@link NotFoundException} If the user is not found
+   * @throws Throws a {@link UnauthorizedException} If the user is not found or the password doesn't match
+   * @throws Throws a {@link ForbiddenException} If the user exceeds the limit of 5min to verify the code
+   * @throws Throws a {@link ForbiddenException} If the user is not found or the code doesn't match
+   * @param data - {@link VerifyCodeDto} object containing the `email` and `code` of the user
+   * @returns a boolean as {@link Promise} containing true if the code matches and false if not
+   */
+  public async verifyResetPasswordCode(data: VerifyCodeDto): Promise<boolean> {
     const possibleUser = await this._userService.findOneByEmail(data.email, ['auth']);
     if (isNil(possibleUser)) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (possibleUser.auth.codeUpdatedAt.getTime() + 1000 * 60 * 5 < Date.now())
+    if (possibleUser.auth.resetPasswordCodeUpdatedAt.getTime() + 1000 * 60 * 5 < Date.now())
       throw new ForbiddenException('Access Denied');
 
-    const codeMatches = await this._hashService.compareHash(data.code, possibleUser.auth.authCode ?? 'UNKNOWN');
+    const codeMatches = await this._hashService.compareHash(
+      data.code,
+      possibleUser.auth.resetPasswordCode ?? 'UNKNOWN',
+    );
     if (!codeMatches) throw new ForbiddenException('Access Denied');
-    this._authRepository.update(possibleUser.auth.id, { authCode: null, accessToken: null, refreshToken: null });
-    // #TODO: send email thanking his choice
-    await this._emailService.sendEmailResetPasswordCode({ receiver: data.email, code: 123456 });
+    return true;
   }
 
   /**
@@ -149,7 +258,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    this.emitCode({ email: possibleUser.email, type: 'reset-password' });
+    this._emitCode({ email: possibleUser.email, type: 'reset-password' });
   }
 
   /**
