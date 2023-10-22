@@ -47,8 +47,7 @@ export class AuthService {
     const tokens: Auth = await this.getTokens({ user: possibleUser, username: possibleUser.name });
     await this.updateRefreshToken({
       user: possibleUser,
-      refreshToken: tokens.refresh_token,
-      authToken: tokens.access_token,
+      tokens,
     });
     await this._emailService.logInAlert({ user: possibleUser });
     this.emitCode({ email: possibleUser.email, type: 'sign-general' });
