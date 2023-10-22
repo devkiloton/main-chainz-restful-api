@@ -107,18 +107,33 @@ export class AuthService {
     await this._emailService.sendEmailResetPasswordCode({ receiver: data.email, code: 123456 });
   }
 
-  public async createAuth(user: UserEntity, tokens: Auth) {
-    const hashedRefreshToken = await this._hashService.generateHash(tokens.refresh_token);
-    const auth = new AuthEntity();
-    auth.user = user;
-    auth.refreshToken = hashedRefreshToken;
-    auth.accessToken = tokens.access_token;
-    await this._authRepository.save(auth);
-  }
+  /**
+   * @description - This method will try to find a user with the given email, verify the time(5min limit), and will compare the code with the hashed code,
+   * if the code matches then it will update the password of the user and will remove the reset password code from the database
+   * @throws Throws a {@link NotFoundException} If the user is not found
+   * @throws Throws a {@link UnauthorizedException} If the user is not found or the password doesn't match
+   * @throws Throws a {@link ForbiddenException} If the user is not found or the code doesn't match
+   * @param data - an object containing the email, the code and the new password of the user
+   */
+  public async resetPassword(data: ResetPasswordDto) {
+    const possibleUser = await this._userService.findOneByEmail(data.email, ['auth']);
+    if (isNil(possibleUser)) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-  public async signOut(id: string) {
-    const user = await this._userService.find(id, 'auth');
-    await this._authRepository.update(user.auth.id, {
+    if (possibleUser.auth.resetPasswordCodeUpdatedAt.getTime() + 1000 * 60 * 5 < Date.now())
+      throw new ForbiddenException('Access Denied');
+
+    const codeMatches = await this._hashService.compareHash(
+      data.code,
+      possibleUser.auth.resetPasswordCode ?? 'UNKNOWN',
+    );
+
+    if (!codeMatches) throw new ForbiddenException('Access Denied');
+    await this._userService.updatePassword({ id: possibleUser.id, password: data.password });
+    await this._authRepository.update(possibleUser.auth.id, {
+      resetPasswordCode: null,
+      accessToken: null,
       refreshToken: null,
     });
   }
