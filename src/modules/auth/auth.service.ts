@@ -67,10 +67,15 @@ export class AuthService {
     await this.emitCode({ email: possibleUser.email, type: 'sign-general' });
   }
 
-  public async updateRefreshToken(data: { user: UserEntity; refreshToken: string }) {
-    const hashedRefreshToken = await this._hashService.generateHash(data.refreshToken);
-    await this._authRepository.update(data.user.auth.id, {
-      refreshToken: hashedRefreshToken,
+  /**
+   * @description This method will remove the refresh token and the access token from the database
+   * @param id - The id of the user
+   */
+  public async signOut(id: string) {
+    const user = await this._userService.find(id, 'auth');
+    await this._authRepository.update(user.auth.id, {
+      refreshToken: null,
+      accessToken: null,
     });
   }
 
