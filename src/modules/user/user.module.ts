@@ -8,7 +8,7 @@ import { HashService } from 'src/shared/services/hash/hash.service';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([UserEntity]), AuthModule],
+  imports: [TypeOrmModule.forFeature([UserEntity, AuthModule])],
   controllers: [UserController],
   providers: [UserService, UniqueEmailValidator, HashService],
   exports: [UserService],

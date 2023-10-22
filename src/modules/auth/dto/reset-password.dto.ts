@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail } from 'class-validator';
+import { IsEmail, IsNotEmpty, MaxLength } from 'class-validator';
 import { StrongPassword } from 'src/modules/user/decorators/strong-password.decorator';
 
-export class AuthDto {
+export class ResetPasswordDto {
   @ApiProperty({
     example: 'john.doe@mail.com',
     required: true,
@@ -18,4 +18,13 @@ export class AuthDto {
   })
   @StrongPassword({ message: 'Invalid password' })
   public password!: string;
+
+  @ApiProperty({
+    example: 'XXXXXX',
+    required: true,
+    description: 'must be at least 6 characters long',
+  })
+  @IsNotEmpty({ message: 'Code is required' })
+  @MaxLength(6, { message: 'Code must be at least 6 characters long' })
+  public code!: string;
 }

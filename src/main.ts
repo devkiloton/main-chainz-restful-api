@@ -4,9 +4,15 @@ import { ValidationPipe } from '@nestjs/common';
 import { useContainer } from 'class-validator';
 import { welcomeMessage } from './resources/helpers/welcome-message';
 import { setupSwagger } from './resources/helpers/setup-swagger';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Helmet for basic security
+  app.use(helmet());
+
+  // Setting up global pipes
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,
@@ -14,12 +20,22 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
-  if (process.env['NODE_ENV'] === 'development') {
-    app.enableCors();
-  }
+
+  // Setting up origins that can access the API
+  app.enableCors({
+    origin: ['http://localhost:4200', 'http://localhost:4000'],
+  });
+
+  // Swagger for API documentation
   setupSwagger(app);
+
+  // Class validator
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
+
+  // Initiate app
   await app.listen(process.env['PORT'] || 3000);
+
+  // Welcome message in the console
   welcomeMessage();
 }
 bootstrap();

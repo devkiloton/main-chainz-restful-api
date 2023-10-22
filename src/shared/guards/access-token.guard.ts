@@ -1,14 +1,18 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { isNotNil } from 'ramda';
 import { UserPayload } from 'src/types/user-payload';
 import { UserReq } from 'src/types/user-req';
 
 @Injectable()
-export class AuthorizationGuard implements CanActivate {
-  constructor(private readonly _jwtService: JwtService) {}
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+export class AccessTokenGuard extends AuthGuard('jwt') {
+  constructor(private readonly _jwtService: JwtService) {
+    super();
+  }
+
+  override async canActivate(context: ExecutionContext): Promise<any> {
     const request = context.switchToHttp().getRequest<UserReq>();
     const access_token = this._tokenExtractor(request);
     if (!access_token) {
@@ -17,12 +21,14 @@ export class AuthorizationGuard implements CanActivate {
 
     try {
       const payload: UserPayload = await this._jwtService.verifyAsync(access_token);
-      request.user = payload;
+      if (!payload.isEmailVerified) {
+        throw new UnauthorizedException('Not authorized');
+      }
     } catch (error) {
       throw new UnauthorizedException('Not authorized');
     }
 
-    return true;
+    return super.canActivate(context);
   }
 
   private _tokenExtractor(request: Request): string | undefined {

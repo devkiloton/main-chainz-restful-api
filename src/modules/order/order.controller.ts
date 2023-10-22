@@ -5,15 +5,15 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrderEntity } from './entities/order.entity';
 import { Response } from 'src/types/response';
 import { CacheInterceptor } from '@nestjs/cache-manager';
-import { AuthorizationGuard } from 'src/shared/guards/authorization.guard';
 import { UserReq } from 'src/types/user-req';
 import { ApiTags } from '@nestjs/swagger';
+import { AccessTokenGuard } from 'src/shared/guards/access-token.guard';
 @ApiTags('/orders')
 @Controller('orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
-  @UseGuards(AuthorizationGuard)
+  @UseGuards(AccessTokenGuard)
   @Post()
   async create(
     @Req()
@@ -29,7 +29,7 @@ export class OrderController {
     };
   }
 
-  @UseGuards(AuthorizationGuard)
+  @UseGuards(AccessTokenGuard)
   @Get()
   @UseInterceptors(CacheInterceptor)
   async findAll(
@@ -44,7 +44,7 @@ export class OrderController {
     };
   }
 
-  @UseGuards(AuthorizationGuard)
+  @UseGuards(AccessTokenGuard)
   @Get(':id')
   @UseInterceptors(CacheInterceptor)
   async find(
@@ -61,7 +61,7 @@ export class OrderController {
     };
   }
 
-  @UseGuards(AuthorizationGuard)
+  @UseGuards(AccessTokenGuard)
   @Patch(':id')
   async update(
     @Req() req: UserReq,
@@ -76,7 +76,7 @@ export class OrderController {
     };
   }
 
-  @UseGuards(AuthorizationGuard)
+  @UseGuards(AccessTokenGuard)
   @Delete(':id')
   async remove(
     @Req()

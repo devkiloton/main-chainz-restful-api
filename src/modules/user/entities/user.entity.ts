@@ -5,10 +5,13 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  JoinColumn,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { AuthEntity } from '../../auth/entities/auth.entity';
 
 @Entity({ name: 'users' })
 export class UserEntity {
@@ -21,6 +24,8 @@ export class UserEntity {
   @Exclude()
   @Column({ name: 'password', nullable: false, length: 255 })
   public password!: string;
+  @Column({ name: 'is_email_verified', nullable: false, default: false })
+  public isEmailVerified!: boolean;
   @CreateDateColumn({ name: 'created_at' })
   public readonly createdAt!: Date;
   @UpdateDateColumn({ name: 'updated_at' })
@@ -30,4 +35,7 @@ export class UserEntity {
   public readonly deletedAt!: Date | null;
   @OneToMany(() => OrderEntity, order => order.user)
   public orders!: OrderEntity[];
+  @OneToOne(() => AuthEntity, auth => auth.user, { cascade: true })
+  @JoinColumn()
+  public auth!: AuthEntity;
 }
