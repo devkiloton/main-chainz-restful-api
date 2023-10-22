@@ -123,10 +123,30 @@ export class AuthService {
     });
   }
 
-  public async getTokens(userId: string, username: string): Promise<Auth> {
+  /**
+   * @description This method will try to find a user with the given email and will emit a code to the user email, so the user can reset his password
+   * @throws Throws a {@link NotFoundException} If the user is not found
+   * @param data - an object containing the email of the user
+   */
+  public async requestResetPassword(email: string): Promise<void> {
+    const possibleUser = await this._userService.findOneByEmail(email, ['auth']);
+    if (isNil(possibleUser)) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    this.emitCode({ email: possibleUser.email, type: 'reset-password' });
+  }
+
+  /**
+   * @description This method will generate a new access token and refresh token
+   * @param data - an object containing the {@link UserEntity} and the username
+   * @returns an {@link Auth} object as {@link Promise} containing the access token and the refresh token
+   */
+  public async getTokens(data: { user: UserEntity; username: string }): Promise<Auth> {
     const payload: UserPayload = {
-      sub: userId,
-      name: username,
+      sub: data.user.id,
+      name: data.username,
+      isEmailVerified: data.user.isEmailVerified,
       message: 'Here you are more than a sub 💟',
     };
 
