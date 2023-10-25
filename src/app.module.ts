@@ -16,6 +16,7 @@ import { CurrenciesModule } from './modules/currencies/currencies.module';
 import { FiatCurrenciesModule } from './modules/fiat-currencies/fiat-currencies.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { ArticlesModule } from './modules/articles/articles.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
     AuthModule,
     CurrenciesModule,
     FiatCurrenciesModule,
+    ArticlesModule,
   ],
   providers: [
     {
