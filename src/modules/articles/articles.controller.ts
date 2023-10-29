@@ -5,18 +5,18 @@ import { ArticlesService } from './articles.service';
 export class ArticlesController {
   constructor(private readonly articlesService: ArticlesService) {}
 
-  @Get()
-  async findAll() {
-    return this.articlesService.findAll();
+  @Get(':id/:language')
+  async findOne(@Param('id') id: string, @Param('language') language: string) {
+    return this.articlesService.findOne({ id, language });
   }
 
-  @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.articlesService.findOne(id);
+  @Get('trends/most-viewed/:language')
+  async findMostViewed(@Param('language') language: string) {
+    return await this.articlesService.findMostViewed(language);
   }
 
-  @Get('most-viewed')
-  async findMostViewed() {
-    return this.articlesService.findMostViewed();
+  @Get('category/:category/:language')
+  async findByCategory(@Param('category') category: string, @Param('language') language: string) {
+    return this.articlesService.findByCategory({ category, language });
   }
 }
