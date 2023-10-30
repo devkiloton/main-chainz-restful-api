@@ -2,7 +2,6 @@ import { EmailModule } from './modules/email/email.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ClassSerializerInterceptor, ConsoleLogger, Module } from '@nestjs/common';
-import { PostgresService } from './config/postgres.config.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OrderModule } from './modules/order/order.module';
 import { AllExceptionsFilter } from './resources/filters/exception-filter/all-exceptions.filter';
@@ -17,6 +16,7 @@ import { FiatCurrenciesModule } from './modules/fiat-currencies/fiat-currencies.
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ArticlesModule } from './modules/articles/articles.module';
+import { MySqlService } from './config/mysql.config.service';
 
 @Module({
   imports: [
@@ -46,8 +46,8 @@ import { ArticlesModule } from './modules/articles/articles.module';
     ]),
     ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
-      useClass: PostgresService,
-      inject: [PostgresService],
+      useClass: MySqlService,
+      inject: [MySqlService],
     }),
     CacheModule.registerAsync({
       useFactory: async () => ({
