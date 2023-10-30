@@ -7,7 +7,7 @@ export class PostgresService implements TypeOrmOptionsFactory {
   constructor(private readonly _configService: ConfigService) {}
   createTypeOrmOptions(_connectionName?: string | undefined): TypeOrmModuleOptions | Promise<TypeOrmModuleOptions> {
     return {
-      type: 'postgres',
+      type: 'mysql',
       host: this._configService.get<string>('DB_HOST'),
       port: this._configService.get<number>('DB_PORT'),
       username: this._configService.get<string>('DB_USERNAME'),

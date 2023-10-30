@@ -19,7 +19,7 @@ export class OrderEntity {
   public currencyCode!: string;
   @Column({ name: 'amount', nullable: false })
   public amount!: number;
-  @Column({ name: 'status', nullable: false, enum: StatusOrder, default: StatusOrder.processing })
+  @Column({ name: 'status', type: 'enum', enum: StatusOrder, default: StatusOrder.processing })
   public status!: StatusOrder;
   @CreateDateColumn({ name: 'created_at' })
   public createdAt!: Date;

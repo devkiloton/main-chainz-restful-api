@@ -6,7 +6,7 @@ export class FiatCurrency {
   @PrimaryColumn({ length: 3 })
   public id!: string;
 
-  @Column({ nullable: false, type: 'float8' })
+  @Column({ nullable: false, type: 'float' })
   public rate!: number;
 
   @Column({ length: 5, nullable: false, unique: true })
