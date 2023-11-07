@@ -3,7 +3,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export const setupSwagger = (app: INestApplication) => {
   const config = new DocumentBuilder()
-    .setTitle(`𝕮𝖊𝖓𝖙𝖗𝖆𝖑 𝕳𝖆𝖘𝖍 𝖆𝖕𝖎`)
+    .setTitle(`𝕸𝕬𝕴𝕹 𝕮𝕳𝕬𝕴𝕹𝖅 𝖆𝖕𝖎`)
     .setDescription(
       `
       ATTENTION!
