@@ -1,14 +1,18 @@
-import { ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ExecutionContext, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { isNotNil } from 'ramda';
+import { AuthService } from 'src/modules/auth/auth.service';
 import { UserPayload } from 'src/types/user-payload';
 import { UserReq } from 'src/types/user-req';
 
 @Injectable()
 export class AccessTokenGuard extends AuthGuard('jwt') {
-  constructor(private readonly _jwtService: JwtService) {
+  constructor(
+    private readonly _jwtService: JwtService,
+    @Inject(AuthService) private readonly _authService: AuthService,
+  ) {
     super();
   }
 
@@ -24,6 +28,10 @@ export class AccessTokenGuard extends AuthGuard('jwt') {
       if (!payload.isEmailVerified) {
         throw new UnauthorizedException('Not authorized');
       }
+      await this._authService.verifyAccessTokenDB({
+        accessToken: access_token,
+        userId: payload.sub,
+      });
     } catch (error) {
       throw new UnauthorizedException('Not authorized');
     }

@@ -16,6 +16,7 @@ import { EmailService } from '../email/email.service';
 import { UpdateUserDto } from '../user/dto/update-user.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -146,9 +147,8 @@ export class AuthService {
     const tokens = await this.getTokens({ user: possibleUser, username: possibleUser.name });
     this._authRepository.update(possibleUser.auth.id, {
       authCode: null,
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
     });
+    this.updateRefreshToken({ user: possibleUser, tokens });
     return tokens;
   }
 
@@ -176,9 +176,8 @@ export class AuthService {
     const tokens = await this.getTokens({ user: possibleUser, username: possibleUser.name });
     this._authRepository.update(possibleUser.auth.id, {
       signGeneralCode: null,
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
     });
+    this.updateRefreshToken({ user: possibleUser, tokens });
 
     if (possibleUser.isEmailVerified) {
       return tokens;
@@ -277,11 +276,11 @@ export class AuthService {
     const [access_token, refresh_token] = await Promise.all([
       this._jwtService.signAsync(payload, {
         secret: this._configService.get<string>('JWT_ACCESS_SECRET'),
-        expiresIn: '10m',
+        expiresIn: '5m',
       }),
       this._jwtService.signAsync(payload, {
         secret: this._configService.get<string>('JWT_REFRESH_SECRET'),
-        expiresIn: '2d',
+        expiresIn: '2 days',
       }),
     ]);
 
@@ -329,9 +328,29 @@ export class AuthService {
    */
   public async updateRefreshToken(data: { user: UserEntity; tokens: Auth }): Promise<void> {
     const hashedRefreshToken = await this._hashService.generateHash(data.tokens.refresh_token);
+    const hashedAccessToken = await this._hashService.generateHash(data.tokens.access_token);
+    console.log('REFRESH UPDATED');
     await this._authRepository.update(data.user.auth.id, {
       refreshToken: hashedRefreshToken,
-      accessToken: data.tokens.access_token,
+      accessToken: hashedAccessToken,
     });
+  }
+
+  /**
+   * @description This method will try to find a user with the given userId and will compare the accessToken with the hashed accessToken,
+   * if the accessToken matches then it will return true
+   *
+   * @param param0 - an object containing the accessToken and the userId
+   * @returns a boolean as {@link Promise} containing true if the accessToken matches and false if not
+   * @throws Throws a {@link UnauthorizedException} If the user is not found or the accessToken doesn't match
+   */
+  public async verifyAccessTokenDB({ accessToken, userId }: { accessToken: string; userId: string }): Promise<boolean> {
+    console.log('ACESS VERIFIED');
+    const possibleUser = await this._userService.find(userId, 'auth');
+    const equal = await bcrypt.compare(accessToken, possibleUser.auth.accessToken!);
+    if (!equal) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    return true;
   }
 }
