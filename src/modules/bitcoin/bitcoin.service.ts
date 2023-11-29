@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { UpdateBitcoinDto } from './dto/update-bitcoin.dto';
 import * as bitcore from 'bitcore-lib';
 import * as Mnemonic from 'bitcore-mnemonic';
 import { ConfigService } from '@nestjs/config';
@@ -12,6 +11,7 @@ import { WalletsService } from '../wallets/wallets.service';
 import { SupportedCurrencies } from 'src/types/shared/supported-currencies';
 import { infoFromSeed } from 'src/resources/helpers/bitcoin/info-from-seed';
 import { decryption } from 'src/resources/helpers/shared/decryption';
+import { PublicWallet } from './types/public-wallet';
 
 @Injectable()
 export class BitcoinService {
@@ -38,7 +38,6 @@ export class BitcoinService {
   async createTransaction(data: { receiver: string; satoshis: number; userId: string }) {
     const network = this._configService.get<'mainnet' | 'testnet'>('BITCOIN_NETWORK');
     const networkConfig = network === 'mainnet' ? bitcore.Networks.mainnet : bitcore.Networks.testnet;
-    // TODO: FETCH SEED FROM DB
     const wallet = await this._walletsService.getWallet({ userId: data.userId, currencyCode: SupportedCurrencies.btc });
     const encryptedSeed = wallet.seed;
     const decryptedSeed = decryption(encryptedSeed);
@@ -57,8 +56,6 @@ export class BitcoinService {
     const balance: Balance = await axios
       .get(`${this._configService.get('BITCOIN_API')}/${network}/address/${info.address}/balance`)
       .then(res => res.data);
-    console.log(balance.balance, data.satoshis + fee);
-    console.log(balance.balance >= data.satoshis + fee);
     if (!(balance.balance >= data.satoshis + fee)) {
       throw new Error('Not enough balance');
     }
@@ -79,19 +76,21 @@ export class BitcoinService {
     return transactionAPI.txid;
   }
 
-  findAll() {
-    return `This action returns all bitcoin`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} bitcoin`;
-  }
-
-  update(id: number, _updateBitcoinDto: UpdateBitcoinDto) {
-    return `This action updates a #${id} bitcoin`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} bitcoin`;
+  async findInformation(userId: string): Promise<PublicWallet> {
+    const network = this._configService.get<'mainnet' | 'testnet'>('BITCOIN_NETWORK');
+    const networkConfig = network === 'mainnet' ? bitcore.Networks.mainnet : bitcore.Networks.testnet;
+    const wallet = await this._walletsService.getWallet({ userId, currencyCode: SupportedCurrencies.btc });
+    const decryptedSeed = decryption(wallet.seed);
+    const code = new Mnemonic(decryptedSeed);
+    const info = infoFromSeed({ code, network: networkConfig });
+    const balance: Balance = await axios
+      .get(`${this._configService.get('BITCOIN_API')}/${network}/address/${info.address}/balance`)
+      .then(res => res.data);
+    return {
+      balance: balance.balance,
+      address: info.address,
+      unconfirmed: balance.unconfirmed,
+      qrcode: `https://chart.googleapis.com/chart?chs=400x400&cht=qr&chl=%20${info.address}&choe=UTF-8&chld=L|2`,
+    };
   }
 }
