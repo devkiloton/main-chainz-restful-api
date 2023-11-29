@@ -1,7 +1,8 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { BitcoinService } from './bitcoin.service';
 import { AccessTokenGuard } from 'src/shared/guards/access-token.guard';
 import { UserPayload } from 'src/types/user-payload';
+import { PublicWallet } from './types/public-wallet';
 
 @UseGuards(AccessTokenGuard)
 @Controller('bitcoin')
@@ -21,5 +22,10 @@ export class BitcoinController {
       receiver: data.receiver,
       userId: req.sub,
     });
+  }
+
+  @Get()
+  async findInformation(@Req() req: UserPayload): Promise<PublicWallet> {
+    return await this.bitcoinService.findInformation(req.sub);
   }
 }
