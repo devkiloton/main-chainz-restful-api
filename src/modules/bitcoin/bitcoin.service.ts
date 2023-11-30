@@ -12,6 +12,7 @@ import { SupportedCurrencies } from 'src/types/shared/supported-currencies';
 import { infoFromSeed } from 'src/resources/helpers/bitcoin/info-from-seed';
 import { decryption } from 'src/resources/helpers/shared/decryption';
 import { PublicWallet } from './types/public-wallet';
+import { CreatedWallet } from './types/created-wallet';
 
 @Injectable()
 export class BitcoinService {
@@ -19,7 +20,7 @@ export class BitcoinService {
     private readonly _configService: ConfigService,
     private readonly _walletsService: WalletsService,
   ) {}
-  async createWallet(data: { userId: string }) {
+  async createWallet(data: { userId: string }): Promise<CreatedWallet> {
     const network = this._configService.get<'mainnet' | 'testnet'>('BITCOIN_NETWORK');
     const networkConfig = network === 'mainnet' ? bitcore.Networks.mainnet : bitcore.Networks.testnet;
     const code = new Mnemonic();
