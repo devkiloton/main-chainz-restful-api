@@ -4,6 +4,7 @@ import { AccessTokenGuard } from 'src/shared/guards/access-token.guard';
 import { UserPayload } from 'src/types/user-payload';
 import { PublicWallet } from './types/public-wallet';
 import { CreatedWallet } from './types/created-wallet';
+import { CreateTransactionDto } from './dto/create-transaction.dto';
 
 @UseGuards(AccessTokenGuard)
 @Controller('bitcoin')
@@ -16,12 +17,8 @@ export class BitcoinController {
   }
 
   @Post('create-transaction')
-  async createTransaction(
-    @Body() data: { satoshis: number; receiver: string },
-    @Req() req: UserPayload,
-  ): Promise<string> {
+  async createTransaction(@Body() data: CreateTransactionDto, @Req() req: UserPayload): Promise<string> {
     return await this.bitcoinService.createTransaction({
-      // SERIALIZE DATA LATER WITH DTO
       satoshis: Number(data.satoshis),
       receiver: data.receiver,
       userId: req.sub,
