@@ -12,6 +12,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { AuthEntity } from '../../auth/entities/auth.entity';
+import { WalletEntity } from 'src/modules/wallets/entities/wallet.entity';
 
 @Entity({ name: 'users' })
 export class UserEntity {
@@ -35,6 +36,8 @@ export class UserEntity {
   public readonly deletedAt!: Date | null;
   @OneToMany(() => OrderEntity, order => order.user)
   public orders!: OrderEntity[];
+  @OneToMany(() => WalletEntity, wallet => wallet.user)
+  public wallets!: WalletEntity[];
   @OneToOne(() => AuthEntity, auth => auth.user, { cascade: true })
   @JoinColumn()
   public auth!: AuthEntity;

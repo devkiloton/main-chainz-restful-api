@@ -48,7 +48,8 @@ export class AuthService {
     }
 
     const tokens: Auth = await this.getTokens({ user: possibleUser, username: possibleUser.name });
-    await this.updateRefreshToken({
+
+    await this._updateAndHashTokensDB({
       user: possibleUser,
       tokens,
     });
@@ -64,7 +65,7 @@ export class AuthService {
   public async signUp(data: CreateUserDto): Promise<void> {
     const possibleUser = await this._userService.create({ user: data, password: data.password });
     const tokens: Auth = await this.getTokens({ user: possibleUser, username: possibleUser.name });
-    await this._createAuth(possibleUser, tokens);
+    await this._createAuthEntity(possibleUser, tokens);
     await this._emailService.sendEmailWelcome({ user: possibleUser });
     await this._emitCode({ email: possibleUser.email, type: 'sign-general' });
   }
@@ -144,11 +145,10 @@ export class AuthService {
     const codeMatches = await this._hashService.compareHash(data.code, possibleUser.auth.authCode ?? 'UNKNOWN');
     if (!codeMatches) throw new ForbiddenException('Access Denied');
     const tokens = await this.getTokens({ user: possibleUser, username: possibleUser.name });
-    this._authRepository.update(possibleUser.auth.id, {
+    await this._authRepository.update(possibleUser.auth.id, {
       authCode: null,
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
     });
+    await this._updateAndHashTokensDB({ user: possibleUser, tokens });
     return tokens;
   }
 
@@ -176,9 +176,9 @@ export class AuthService {
     const tokens = await this.getTokens({ user: possibleUser, username: possibleUser.name });
     this._authRepository.update(possibleUser.auth.id, {
       signGeneralCode: null,
-      accessToken: tokens.access_token,
-      refreshToken: tokens.refresh_token,
     });
+
+    this._updateAndHashTokensDB({ user: possibleUser, tokens });
 
     if (possibleUser.isEmailVerified) {
       return tokens;
@@ -296,12 +296,13 @@ export class AuthService {
    * @param user - The {@link UserEntity} object
    * @param tokens - The {@link Auth} object
    */
-  private async _createAuth(user: UserEntity, tokens: Auth): Promise<void> {
+  private async _createAuthEntity(user: UserEntity, tokens: Auth): Promise<void> {
     const hashedRefreshToken = await this._hashService.generateHash(tokens.refresh_token);
+    const hashedAccessToken = await this._hashService.generateHash(tokens.access_token);
     const auth = new AuthEntity();
     auth.user = user;
     auth.refreshToken = hashedRefreshToken;
-    auth.accessToken = tokens.access_token;
+    auth.accessToken = hashedAccessToken;
     await this._authRepository.save(auth);
   }
 
@@ -319,7 +320,7 @@ export class AuthService {
     const refreshTokenMatches = await this._hashService.compareHash(data.refreshToken, user.auth.refreshToken);
     if (!refreshTokenMatches) throw new ForbiddenException('Access Denied');
     const tokens = await this.getTokens({ user: user, username: user.name });
-    await this.updateRefreshToken({ user, tokens });
+    await this._updateAndHashTokensDB({ user, tokens });
     return tokens;
   }
 
@@ -327,11 +328,12 @@ export class AuthService {
    * @description This method will update the refresh token and the access token in the database
    * @param data - an object containing the {@link UserEntity} and the {@link Auth} object
    */
-  public async updateRefreshToken(data: { user: UserEntity; tokens: Auth }): Promise<void> {
+  public async _updateAndHashTokensDB(data: { user: UserEntity; tokens: Auth }): Promise<void> {
     const hashedRefreshToken = await this._hashService.generateHash(data.tokens.refresh_token);
+    const hashedAccessToken = await this._hashService.generateHash(data.tokens.access_token);
     await this._authRepository.update(data.user.auth.id, {
       refreshToken: hashedRefreshToken,
-      accessToken: data.tokens.access_token,
+      accessToken: hashedAccessToken,
     });
   }
 }

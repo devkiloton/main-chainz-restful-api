@@ -1,3 +1,4 @@
+import { WalletsModule } from './modules/wallets/wallets.module';
 import { EmailModule } from './modules/email/email.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
@@ -17,9 +18,11 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ArticlesModule } from './modules/articles/articles.module';
 import { MySqlService } from './config/mysql.config.service';
+import { BitcoinModule } from './modules/bitcoin/bitcoin.module';
 
 @Module({
   imports: [
+    WalletsModule,
     EmailModule,
     MailerModule.forRootAsync({
       useFactory: async (_configService: ConfigService) => ({
@@ -63,6 +66,7 @@ import { MySqlService } from './config/mysql.config.service';
     CurrenciesModule,
     FiatCurrenciesModule,
     ArticlesModule,
+    BitcoinModule,
   ],
   providers: [
     {
