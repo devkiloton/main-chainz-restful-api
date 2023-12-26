@@ -7,7 +7,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { OrderModule } from './modules/order/order.module';
 import { AllExceptionsFilter } from './resources/filters/exception-filter/all-exceptions.filter';
 import { CacheModule } from '@nestjs/cache-manager';
-import { redisStore } from 'cache-manager-redis-yet';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -41,10 +40,11 @@ import { BitcoinModule } from './modules/bitcoin/bitcoin.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    // Improve throttling later
     ThrottlerModule.forRoot([
       {
         ttl: 1000 * 2,
-        limit: 3,
+        limit: 10,
       },
     ]),
     ScheduleModule.forRoot(),
@@ -53,12 +53,13 @@ import { BitcoinModule } from './modules/bitcoin/bitcoin.module';
       inject: [MySqlService],
     }),
     CacheModule.registerAsync({
-      useFactory: async () => ({
-        store: await redisStore({
-          ttl: 3600 * 5,
-        }),
-      }),
       isGlobal: true,
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        ttl: 3600 * 5,
+        url: configService.get('REDIS_URL'),
+      }),
+      inject: [ConfigService],
     }),
     UserModule,
     OrderModule,
