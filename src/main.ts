@@ -22,9 +22,7 @@ async function bootstrap() {
   );
 
   // Setting up origins that can access the API
-  app.enableCors({
-    origin: ['http://localhost:4200', 'http://localhost:4000'],
-  });
+  app.enableCors();
 
   // Swagger for API documentation
   setupSwagger(app);
