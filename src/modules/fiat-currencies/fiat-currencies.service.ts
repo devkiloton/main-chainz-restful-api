@@ -26,7 +26,7 @@ export class FiatCurrenciesService {
     return possibleFiatCurrency;
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_MINUTE)
   async update(): Promise<void> {
     const options = {
       method: 'GET',
