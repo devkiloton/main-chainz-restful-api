@@ -6,14 +6,12 @@ https://docs.nestjs.com/modules
 
 import { Module } from '@nestjs/common';
 import { WalletEntity } from './entities/wallet.entity';
-import { UserService } from '../user/user.service';
-import { UserModule } from '../user/user.module';
 import { UserEntity } from '../user/entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([WalletEntity, UserEntity]), UserModule],
+  imports: [TypeOrmModule.forFeature([WalletEntity, UserEntity])],
   controllers: [],
-  providers: [WalletsService, UserService],
+  providers: [WalletsService],
   exports: [WalletsService],
 })
 export class WalletsModule {}

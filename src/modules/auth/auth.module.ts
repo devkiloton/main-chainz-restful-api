@@ -11,10 +11,22 @@ import { RefreshTokenStrategy } from './strategies/refresh-token.strategy';
 import { AccessTokenStrategy } from './strategies/access-token.strategy';
 import { UserEntity } from '../user/entities/user.entity';
 import { EmailService } from '../email/email.service';
+import { WalletsService } from '../wallets/wallets.service';
+import { BitcoinService } from '../bitcoin/bitcoin.service';
+import { WalletEntity } from '../wallets/entities/wallet.entity';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, HashService, UserService, AccessTokenStrategy, RefreshTokenStrategy, EmailService],
+  providers: [
+    AuthService,
+    HashService,
+    UserService,
+    AccessTokenStrategy,
+    RefreshTokenStrategy,
+    EmailService,
+    WalletsService,
+    BitcoinService,
+  ],
   imports: [
     JwtModule.registerAsync({
       useFactory: (_configService: ConfigService) => {
@@ -26,7 +38,7 @@ import { EmailService } from '../email/email.service';
       inject: [ConfigService],
       global: true,
     }),
-    TypeOrmModule.forFeature([AuthEntity, UserEntity]),
+    TypeOrmModule.forFeature([AuthEntity, UserEntity, WalletEntity]),
   ],
   exports: [AuthService],
 })

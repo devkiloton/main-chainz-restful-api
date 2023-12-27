@@ -173,19 +173,16 @@ export class AuthService {
 
     const codeMatches = await this._hashService.compareHash(data.code, possibleUser.auth.signGeneralCode ?? 'UNKNOWN');
     if (!codeMatches) throw new ForbiddenException('Access Denied');
-    const tokens = await this.getTokens({ user: possibleUser, username: possibleUser.name });
+
     this._authRepository.update(possibleUser.auth.id, {
       signGeneralCode: null,
     });
 
+    const updatableUser = new UpdateUserDto();
+    updatableUser.isEmailVerified = true;
+    const user = await this._userService.update({ id: possibleUser.id, user: updatableUser });
+    const tokens = await this.getTokens({ user, username: user.name });
     this._updateAndHashTokensDB({ user: possibleUser, tokens });
-
-    if (possibleUser.isEmailVerified) {
-      return tokens;
-    }
-    const user = new UpdateUserDto();
-    user.isEmailVerified = true;
-    await this._userService.update({ id: possibleUser.id, user });
     return tokens;
   }
 

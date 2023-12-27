@@ -13,10 +13,15 @@ import { infoFromSeed } from 'src/resources/helpers/bitcoin/info-from-seed';
 import { decryption } from 'src/resources/helpers/shared/decryption';
 import { PublicWallet } from './types/public-wallet';
 import { CreatedWallet } from './types/created-wallet';
+import { InjectRepository } from '@nestjs/typeorm';
+import { UserEntity } from '../user/entities/user.entity';
+import { Repository } from 'typeorm';
+import { isNil, isNull } from 'lodash';
 
 @Injectable()
 export class BitcoinService {
   constructor(
+    @InjectRepository(UserEntity) private readonly _user: Repository<UserEntity>,
     private readonly _configService: ConfigService,
     private readonly _walletsService: WalletsService,
   ) {}
@@ -53,8 +58,18 @@ export class BitcoinService {
     const network = this._configService.get<'mainnet' | 'testnet'>('BITCOIN_NETWORK');
     const networkConfig = network === 'mainnet' ? bitcore.Networks.mainnet : bitcore.Networks.testnet;
 
+    const options = { where: { id: data.userId }, relations: ['wallets'] };
+    const user = await this._user.findOne(options);
+    if (isNull(user)) {
+      throw new Error('User not found');
+    }
+
     // Get the wallet of the user that is creating the transaction.
-    const wallet = await this._walletsService.getWallet({ userId: data.userId, currencyCode: SupportedCurrencies.btc });
+    const wallet = user.wallets.find(wallet => wallet.currencyCode === SupportedCurrencies.btc);
+
+    if (isNil(wallet)) {
+      throw new Error('Wallet not found');
+    }
 
     // Take and decrypt the seed of the wallet.
     const encryptedSeed = wallet.seed;
@@ -129,7 +144,16 @@ export class BitcoinService {
   async findInformation(userId: string): Promise<PublicWallet> {
     const network = this._configService.get<'mainnet' | 'testnet'>('BITCOIN_NETWORK');
     const networkConfig = network === 'mainnet' ? bitcore.Networks.mainnet : bitcore.Networks.testnet;
-    const wallet = await this._walletsService.getWallet({ userId, currencyCode: SupportedCurrencies.btc });
+    const options = { where: { id: userId }, relations: ['wallets'] };
+    const user = await this._user.findOne(options);
+    if (isNull(user)) {
+      throw new Error('User not found');
+    }
+    const wallet = user.wallets.find(wallet => wallet.currencyCode === SupportedCurrencies.btc);
+
+    if (isNil(wallet)) {
+      throw new Error('Wallet not found');
+    }
     const decryptedSeed = decryption(wallet.seed);
     const code = new Mnemonic(decryptedSeed);
     const info = infoFromSeed({ code, network: networkConfig });
