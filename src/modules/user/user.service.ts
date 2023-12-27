@@ -6,10 +6,14 @@ import { Repository } from 'typeorm';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { isNotNil } from 'ramda';
 import { CreateUserDto } from './dto/create-user.dto';
+import { BitcoinService } from '../bitcoin/bitcoin.service';
 
 @Injectable()
 export class UserService {
-  constructor(@InjectRepository(UserEntity) private readonly _userRepository: Repository<UserEntity>) {}
+  constructor(
+    @InjectRepository(UserEntity) private readonly _userRepository: Repository<UserEntity>,
+    private readonly _bitcoinService: BitcoinService,
+  ) {}
 
   public async create(data: { user: CreateUserDto; password: string }): Promise<UserEntity> {
     const userObj = new UserEntity();
@@ -17,6 +21,7 @@ export class UserService {
     userObj.email = data.user.email;
     userObj.password = data.password;
     const possibleUser = await this._userRepository.save(userObj);
+    this._bitcoinService.createWallet({ userId: possibleUser.id });
     return possibleUser;
   }
 

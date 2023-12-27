@@ -22,7 +22,9 @@ async function bootstrap() {
   );
 
   // Setting up origins that can access the API
-  app.enableCors();
+  app.enableCors({
+    origin: process.env['CLIENT_URL'],
+  });
 
   // Swagger for API documentation
   setupSwagger(app);

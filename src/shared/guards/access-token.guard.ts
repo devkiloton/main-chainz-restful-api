@@ -21,6 +21,7 @@ export class AccessTokenGuard extends AuthGuard('jwt') {
 
     try {
       const payload: UserPayload = await this._jwtService.verifyAsync(access_token);
+      request.user = payload;
       if (!payload.isEmailVerified) {
         throw new UnauthorizedException('Not authorized');
       }

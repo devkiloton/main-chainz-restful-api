@@ -5,9 +5,10 @@ import { UserPayload } from 'src/types/user-payload';
 import { PublicWallet } from './types/public-wallet';
 import { CreatedWallet } from './types/created-wallet';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
+import { UserReq } from 'src/types/user-req';
 
-@UseGuards(AccessTokenGuard)
 @Controller('bitcoin')
+@UseGuards(AccessTokenGuard)
 export class BitcoinController {
   constructor(private readonly bitcoinService: BitcoinService) {}
 
@@ -26,7 +27,7 @@ export class BitcoinController {
   }
 
   @Get()
-  async findInformation(@Req() req: UserPayload): Promise<PublicWallet> {
-    return await this.bitcoinService.findInformation(req.sub);
+  async findInformation(@Req() req: UserReq): Promise<PublicWallet> {
+    return await this.bitcoinService.findInformation(req.user.sub);
   }
 }
